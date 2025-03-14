@@ -7,7 +7,7 @@
           <label>대회정보</label>
         </div>
         <div class="form-group right">
-          <input type="text" class="form-control" />
+          <input type="text" class="form-control" v-model="competitionInfo"/>
         </div>
       </div>
 
@@ -17,7 +17,7 @@
           <label>날짜</label>
         </div>
         <div class="form-group right">
-          <input type="date" class="form-control" />
+          <input type="date" class="form-control" v-model="date" />
         </div>
       </div>
 
@@ -74,7 +74,7 @@
 
     <!-- 하단 버튼 영역 -->
     <div class="button-container">
-      <button class="btn btn-save" @click="showSaveModal = true">저장</button>
+      <button class="btn btn-save" @click="showSaveModal">저장</button>
       <button class="btn btn-cancel" @click="showExitModal = true">종료</button>
     </div>
 
@@ -173,7 +173,12 @@ export default {
       this.$router.push('/gameinfo')
     },
     handleSaveCancel() {
-      this.showSaveModal = false
+      if (!this.validateForm()) {
+        // 모든 필수 항목이 채워지지 않은 경우
+        alert('모든 필수 항목을 입력하거나 선택해주세요.');
+        return;
+      }
+      this.showSaveModal = true
     },
     handleExitConfirm() {
       this.showExitModal = false
@@ -185,7 +190,22 @@ export default {
     // 실제 API 로직
     async callSaveAPI() {
       // TODO: API 호출 로직 작성 (axios 등)
+    },
+    validateForm() {
+    // 대회정보
+    if (!this.competitionInfo) return false;
+    // 날짜
+    if (!this.date) return false;
+    // 팀 선택
+    if (!this.selectedTeam1 || !this.selectedTeam2) return false;
+    // 세트 순서(각 항목이 비어있지 않아야 함)
+    for (let i = 0; i < this.setSelections.length; i++) {
+      if (!this.setSelections[i]) {
+        return false;
+      }
     }
+    return true;
+  },
   }
 }
 </script>
