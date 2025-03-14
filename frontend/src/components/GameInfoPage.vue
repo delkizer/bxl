@@ -74,9 +74,31 @@
 
     <!-- 하단 버튼 영역 -->
     <div class="button-container">
-      <button class="btn btn-save">저장</button>
-      <button class="btn btn-cancel">종료</button>
+      <button class="btn btn-save" @click="showSaveModal = true">저장</button>
+      <button class="btn btn-cancel" @click="showExitModal = true">종료</button>
     </div>
+
+    <!-- 저장 모달 -->
+    <ConfirmationModal
+      :visible="showSaveModal"
+      title="저장 확인"
+      message="저장을 진행하시겠습니까?"
+      confirmButtonLabel="확인"
+      cancelButtonLabel="취소"
+      @confirm="handleSaveConfirm"
+      @cancel="handleSaveCancel"
+    />
+
+    <!-- 종료 모달 -->
+    <ConfirmationModal
+      :visible="showExitModal"
+      title="종료 확인"
+      message="Home으로 이동하시겠습니까?"
+      confirmButtonLabel="확인"
+      cancelButtonLabel="취소"
+      @confirm="handleExitConfirm"
+      @cancel="handleExitCancel"
+    />
 
     <!-- 모달 (직접입력 시 표시) -->
     <div v-if="showCustomTeamModal" class="modal-overlay">
@@ -99,20 +121,29 @@
 </template>
 
 <script>
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
+
 export default {
   name: 'GameInfoPage',
+  components: {
+    ConfirmationModal
+  },
   data() {
     return {
       selectedTeam1: '',
       selectedTeam2: '',
-      showCustomTeamModal: false, //모달 표시 여부
+      showCustomTeamModal: false, //직업 입력 모달
       customTeamName: '',         //새로 입력할 팀 이름
+
+      showSaveModal: false,       // 저장 모달
+      showExitModal: false,       // 종료 모달
 
       allSetOptions: ['남자단식', '여자단식', '남자복식', '여자복식', '3 vs 3'],
       setSelections: ['', '', '', '', ''],
     }
   },
   methods: {
+    // (1) 직접입력 모달
     onTeamChange(teamField) {
       if (teamField === 'team1' && this.selectedTeam1 === '직접입력') {
         this.showCustomTeamModal = true
@@ -136,6 +167,25 @@ export default {
         return idx !== index && sel === option
       })
     },
+    async handleSaveConfirm() {
+      this.showSaveModal = false
+      await this.callSaveAPI()
+      this.$router.push('/gameinfo')
+    },
+    handleSaveCancel() {
+      this.showSaveModal = false
+    },
+    handleExitConfirm() {
+      this.showExitModal = false
+      this.$router.push('/')
+    },
+    handleExitCancel() {
+      this.showExitModal = false
+    },
+    // 실제 API 로직
+    async callSaveAPI() {
+      // TODO: API 호출 로직 작성 (axios 등)
+    }
   }
 }
 </script>
