@@ -11,8 +11,8 @@ class Config():
         env_default = environ.Env()
 
         # 환경별 .env 파일 결정
-        DJANGO_ENV = env_default('DJANGO_ENV', default='development')
-        env_file_name = f".env.{DJANGO_ENV}"
+        django_env = env_default('DJANGO_ENV', default='development')
+        env_file_name = f".env.{django_env}"
         env_file_path = self.BASE_DIR / env_file_name
         environ.Env.read_env(env_file=str(env_file_path))
         self.env = environ.Env()
