@@ -1,7 +1,5 @@
 import socket
-import arrow
 from decimal import Decimal
-
 
 class Utils:
     def __init__(self, logger):
@@ -17,23 +15,6 @@ class Utils:
             r0 = '야간'
 
         return r0
-
-    @staticmethod
-    def get_weekday_name(game_date):
-        # game_date는 YYYYMMDD 형태의 정수
-        if not (10000000 <= game_date <= 99999999):
-            raise ValueError("game_date must be an 8-digit integer in the form YYYYMMDD")
-
-        # 연도, 월, 일 추출
-        year = game_date // 10000
-        month = (game_date % 10000) // 100
-        day = game_date % 100
-
-        # arrow 모듈을 사용해 날짜 객체 생성 및 현지 시각으로 변환
-        date = arrow.get(year, month, day).to('Asia/Seoul')
-        weekday_name = date.format('dddd', locale='ko')
-
-        return weekday_name[0]
 
     @staticmethod
     def homegame(x,y) :

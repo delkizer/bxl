@@ -2,19 +2,20 @@ import jwt
 import traceback
 import custom_exception
 import json
-import requests
 
 from class_config.class_env import Config
+from class_config.class_db import ConfigDB
+from class_lib.api.base_model import UserCreate
 from class_lib.local_utils import utils
 from define.define_code import DefineCode
 
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError
-
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from jwt import ExpiredSignatureError, InvalidSignatureError, InvalidTokenError
+from passlib.context import CryptContext
 
 class Auth:
     def __init__(self, logger):
@@ -23,15 +24,106 @@ class Auth:
         self.logger = logger
         self.define_code = DefineCode()
         self.utils = utils.Utils(self.logger)
+        self.config = Config()
+        self.db = ConfigDB()
+        self.bxl_session_factory = self.db.get_bxl_session_factory(self.config)
 
         self.jwt_private_key = self.config.jwt_key_path + "/private_key.pem"
         self.jwt_public_key = self.config.jwt_key_path + "/public_key.pem"
 
-    def get_jwt_token(self, email:str, sub: str, expires_hours: int = 1):
+        # 비밀번호 암호화 컨텍스트
+        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    # 사용자 인증
+    def authenticate_user(self, email: str, password: str, role: str):
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+                SELECT password_hash, role, is_active
+                  FROM bxl.admin_users
+                 WHERE email = :email  
+            """)
+            result = session.execute(query, {'email': email}).mappings().all()
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            user_info = result[0]
+            self.logger.info(f"DB hash: {user_info['password_hash']}")
+            hashed_password = self.pwd_context.hash(password)
+            self.logger.info(f"hashed_password={hashed_password}")
+
+            if not self.pwd_context.verify(password, user_info['password_hash']):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect password",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            if user_info['role'] != role:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect role",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            if not user_info['is_active']:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User is not activated",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            return True
+
+        except HTTPException as http_exc:
+            # HTTPException을 그대로 재전달
+            raise http_exc
+
+        except Exception as e:
+            self.logger.error(f"Error authenticate_user querying the database for email={email}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        finally:
+            session.close()
+
+    def create_user(self, user: UserCreate):
+        password_hash = self.pwd_context.hash(user.password)
+
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+                         INSERT INTO bxl.admin_users (email, password_hash, full_name, role, is_active)
+                         VALUES (:email, :password_hash, :full_name, :role, :is_active)
+                         """)
+            session.execute(query, {
+                'email': user.email,
+                'password_hash': password_hash,
+                'full_name':user.full_name,
+                'role': user.role,
+                'is_active':user.is_active
+            })
+            session.commit()
+            return {"message": "User created"}
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"User creation failed: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        finally:
+            session.close()
+
+    def get_jwt_token(self, email:str, sub: str):
         payload = {
             "email": email,
+            "type": "access",
             "sub": sub,
-            "exp": datetime.now(timezone.utc) + timedelta(hours=expires_hours),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=int(self.config.jwt_expire_minutes)),
             "iat": datetime.now(timezone.utc)
         }
 
@@ -55,6 +147,60 @@ class Auth:
             # 기타 예외
             self.logger.error(f"[get_jwt_token] Exception: {e}\n{traceback.format_exc()}")
             raise custom_exception.BaseProjectError("Internal error", 500) from e
+
+    def create_refresh_token(self, email: str, sub: str, expires_days: int = 7):
+        payload = {
+            "email": email,
+            "type": "refresh",
+            "sub": sub,
+            "exp": datetime.now(timezone.utc) + timedelta(hours=expires_days),
+            "iat": datetime.now(timezone.utc)
+        }
+        try:
+            with open(self.jwt_private_key, "r") as f:
+                private_key = f.read()
+
+            refresh_token = jwt.encode(
+                payload,
+                private_key,
+                algorithm=self.define_code.JWT_ALGORITHM
+            )
+
+            return refresh_token
+
+        except FileNotFoundError as e:
+            # 키 파일이 없거나 경로가 잘못된 경우
+            self.logger.error(f"[create_refresh_token] Private key file not found: {e}\n{traceback.format_exc()}")
+            raise custom_exception.PrivateKeyNotFoundError(e)
+
+        except Exception as e:
+            # 기타 예외
+            self.logger.error(f"[create_refresh_token] Exception: {e}\n{traceback.format_exc()}")
+            raise custom_exception.BaseProjectError("Internal error", 500) from e
+
+    def save_refresh_token_to_db(self, email, refresh_token, expires_days=7):
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+            UPDATE bxl.admin_users
+               SET refresh_token = :refresh_token, 
+                   token_expire_at = :token_expire_at
+             WHERE email = :email 
+                         """)
+            session.execute(query, {
+                'email': email,
+                'refresh_token': refresh_token,
+                'token_expire_at': datetime.now(timezone.utc) + timedelta(days=expires_days)
+            })
+            session.commit()
+            return True
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"Saving refresh token failed for email={email}: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        finally:
+            session.close()
 
     def is_jwt_verify(self, token: str):
         with open(self.jwt_public_key, "r") as f:

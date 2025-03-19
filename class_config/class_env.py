@@ -49,3 +49,12 @@ class Config():
     @property
     def jwt_key_path(self):
         return self.env('JWT_KEY_PATH')
+
+    @property
+    def jwt_expire_minutes(self):
+        return self.env('JWT_EXPIRE_MINUTES')
+
+    @property
+    def jwt_sub(self):
+        return self.env('JWT_SUB')
+
