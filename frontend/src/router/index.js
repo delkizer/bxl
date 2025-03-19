@@ -4,12 +4,18 @@ import MainPage from '@/components/MainPage.vue'
 import CoderPage from '@/components/CoderPage.vue'
 import ScorerPage from '@/components/ScorerPage.vue'
 import GameInfoPage from "@/components/GameInfoPage.vue";
+import LoginPage from "@/components/Login.vue";
 
 const routes = [
     {
       path: '/',
       name: 'home',
       component: MainPage
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginPage
     },
     {
       path: '/coder',

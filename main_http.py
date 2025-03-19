@@ -1,13 +1,6 @@
-import traceback
-from http.client import HTTPResponse
-
-import requests
-import json
-
-from fastapi import FastAPI, Path, Query, HTTPException, Depends, status, Body
-from fastapi.responses import RedirectResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional, Dict
+from fastapi import FastAPI, Path, Query, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from class_config.class_env import Config
 from class_config.class_log import ConfigLogger
@@ -17,8 +10,6 @@ from class_config.class_define import Define
 from class_lib.api.base_model import UserLogin, UserCreate
 from class_lib.api.auth import Auth
 from define.define_code import DefineCode
-from custom_exception import BaseProjectError, PrivateKeyNotFoundError
-
 
 # 기본 클래스 설정
 config = Config()
@@ -38,6 +29,19 @@ app = FastAPI(
     docs_url="/api/docs",               # Swagger UI 라우트
     redoc_url="/api/redoc",             # Redoc 라우트 (원하면 삭제 가능)
     openapi_url="/api/openapi.json",    # OpenAPI JSON
+)
+
+# CORS를 허용할 도메인(혹은 포트) 목록
+origins = [
+    "http://localhost:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,          # or ["*"] 로 모든 도메인 허용
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -67,6 +71,30 @@ async def user_login(user: UserLogin):
         refresh_token = auth.create_refresh_token(user.email, config.jwt_sub)
 
         auth.save_refresh_token_to_db(user.email, refresh_token)
+
+        response = JSONResponse(content={
+            "msg": "login successful",
+        })
+
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=config.set_cookie_secret,  # HTTPS 환경이라면 True
+            samesite="none",  # 또는 lax / strict
+            path="/",
+            max_age=60 * 60 * 24  # 1일 등 원하는 유효기간
+        )
+
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=config.set_cookie_secret,
+            samesite="none",
+            path="/",
+            max_age=60 * 60 * 24 * 8
+        )
 
         return {
             "access_token": access_token,

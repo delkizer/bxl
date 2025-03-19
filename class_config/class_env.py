@@ -58,3 +58,8 @@ class Config():
     def jwt_sub(self):
         return self.env('JWT_SUB')
 
+    @property
+    def set_cookie_secret(self):
+        cookie_secret_str = str(self.env("COOKIE_SECRET") or "").strip().lower()
+        return cookie_secret_str == "true"
+
