@@ -22,14 +22,14 @@ class TaskDummy:
         config_logger = ConfigLogger(self.class_name , 365)
         self.logger = config_logger.get_logger('fastapi')
         self.db = None
-        self.mlb_session_factory = None
+        self.bxl_session_factory = None
         self.last_update_timestamp = None  # 비즈니스 로직의 마지막 실행 타임스탬프
         self.task_name = "dummy"
 
     def initialize_db_connection(self):
         # 프로세스 내부에서 DB 연결을 새로 생성하는 메서드
         self.db = ConfigDB()
-        self.mlb_session_factory = self.db.get_mlb_session_factory( self.config )
+        self.bxl_session_factory = self.db.get_bxl_session_factory( self.config )
         self.logger.info(f"Database connection initialized for {self.class_name}..")
 
     """빈 작업 클래스: 비즈니스 로직 없이 기본적으로 작동하는 형태만을 구현"""

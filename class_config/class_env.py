@@ -46,3 +46,6 @@ class Config():
     def postgres_db_name_spotv(self):
         return self.env('DB_NAME_SPOTV')
 
+    @property
+    def jwt_key_path(self):
+        return self.env('JWT_KEY_PATH')

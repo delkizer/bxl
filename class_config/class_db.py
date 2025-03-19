@@ -17,9 +17,9 @@ from class_config.class_env import Config
 class ConfigDB:
     config = Config()
 
-    mlb: Optional[sqlalchemy.engine.base.Engine] = field(default=None, init=False)
+    bxl: Optional[sqlalchemy.engine.base.Engine] = field(default=None, init=False)
 
-    mlb_session_factory: Optional[sessionmaker] = field(default=None, init=False)
+    bxl_session_factory: Optional[sessionmaker] = field(default=None, init=False)
 
     def _initialize_engine(self, db_url: str):
         # SQLAlchemy Core 엔진 초기화
@@ -35,8 +35,8 @@ class ConfigDB:
         # SQLAlchemy Core에서 세션 팩토리를 초기화
         return sessionmaker(bind=engine)
 
-    def get_mlb_session_factory(self, config):
-        if not self.mlb:
+    def get_bxl_session_factory(self, config):
+        if not self.bxl:
             try:
                 # 필수 설정 값 확인
                 required_attrs = ["postgres_user", "postgres_pass", "postgres_host", "postgres_port",
@@ -46,17 +46,17 @@ class ConfigDB:
                         raise AttributeError(f"⚠️ Config에 {attr} 속성이 없습니다.")
 
                 # DB 연결 URL 생성
-                mlb_url = f"postgresql+psycopg2://{config.postgres_user}:{config.postgres_pass}" \
+                bxl_url = f"postgresql+psycopg2://{config.postgres_user}:{config.postgres_pass}" \
                           f"@{config.postgres_host}:{config.postgres_port}/{config.postgres_db_name_spotv}" \
                           f"?client_encoding=utf8"
-                #print(f"Connecting to {mlb_url}")
+                #print(f"Connecting to {bxl_url}")
 
                 # 데이터베이스 엔진 및 세션 팩토리 초기화
-                self.mlb = self._initialize_engine(mlb_url)
-                self.mlb_session_factory = self._initialize_session_factory(self.mlb)
+                self.bxl = self._initialize_engine(bxl_url)
+                self.bxl_session_factory = self._initialize_session_factory(self.bxl)
 
-                if not self.mlb_session_factory:
-                    raise RuntimeError("❌ mlb_session_factory 초기화 실패!")
+                if not self.bxl_session_factory:
+                    raise RuntimeError("❌ bxl_session_factory 초기화 실패!")
 
             except AttributeError as e:
                 print(f"🔴 AttributeError 발생: {e}")
@@ -66,13 +66,13 @@ class ConfigDB:
                 print(f"🔴 DB 연결 오류 발생: {e}")
                 raise
 
-        return self.mlb_session_factory
+        return self.bxl_session_factory
 
     def close_connections(self):
         try:
-            if self.mlb:
-                self.mlb.dispose()
-                self.mlb = None
+            if self.bxl:
+                self.bxl.dispose()
+                self.bxl = None
 
         except Exception as e:
             print(f"Error while closing database connections: {e}")
