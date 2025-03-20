@@ -60,6 +60,6 @@ class Config():
 
     @property
     def set_cookie_secret(self):
-        cookie_secret_str = str(self.env("COOKIE_SECRET") or "").strip().lower()
+        cookie_secret_str = str(self.env("SET_COOKIE_SECURE") or "").strip().lower()
         return cookie_secret_str == "true"
 

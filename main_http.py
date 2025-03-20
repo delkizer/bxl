@@ -69,7 +69,6 @@ async def user_login(user: UserLogin):
         access_token = auth.get_jwt_token(user.email, config.jwt_sub)
 
         refresh_token = auth.create_refresh_token(user.email, config.jwt_sub)
-
         auth.save_refresh_token_to_db(user.email, refresh_token)
 
         response = JSONResponse(content={
@@ -96,11 +95,7 @@ async def user_login(user: UserLogin):
             max_age=60 * 60 * 24 * 8
         )
 
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
+        return response
 
     except HTTPException as http_exc:
         # authenticate_user에서 발생한 HTTPException을 그대로 전달
