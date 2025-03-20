@@ -12,6 +12,11 @@ class UserCreate(BaseModel):
     role: str = Field(..., example="admin")
     is_active: bool = Field(..., example=True)
 
+class UserInfo(BaseModel):
+    email: str = Field(..., example="user@example.com")
+    full_name: str = Field(..., example="test user")
+    role: str = Field(..., example="admin")
+
 class TokenExchangeResponse(BaseModel):
     message: str = Field(..., example="Token exchange success")
     access_token: str = Field(..., example="ya29.a0AfH6SM...")

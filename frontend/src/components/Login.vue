@@ -29,6 +29,7 @@
 
 <script>
 import apiClient from "@/services/api.js";
+import { useAuthStore } from "@/stores/auth";
 
 export default {
   name: 'LoginPage',
@@ -41,19 +42,10 @@ export default {
   methods: {
     async onLogin() {
       try {
-        const response = await apiClient.post('/api/login', {
-          email: this.username,
-          password: this.password
-        });
-
-        if (response.status === 200) {
-          this.$router.push('/');
-        }
-        else {
-          alert(response.status);
-        }
-      }
-      catch (error) {
+        const authStore = useAuthStore();
+        await authStore.login(this.username, this.password);
+        this.$router.push('/');
+      } catch (error) {
         console.error(error);
         alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
       }

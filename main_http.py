@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path, Query, HTTPException, status
+from fastapi import FastAPI, Path, Query, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -7,7 +7,7 @@ from class_config.class_log import ConfigLogger
 from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 
-from class_lib.api.base_model import UserLogin, UserCreate
+from class_lib.api.base_model import UserLogin, UserCreate, UserInfo
 from class_lib.api.auth import Auth
 from define.define_code import DefineCode
 
@@ -80,7 +80,7 @@ async def user_login(user: UserLogin):
             value=access_token,
             httponly=True,
             secure=config.set_cookie_secret,  # HTTPS 환경이라면 True
-            samesite="none",  # 또는 lax / strict
+            samesite=config.set_cookie_samesite,
             path="/",
             max_age=60 * 60 * 24  # 1일 등 원하는 유효기간
         )
@@ -90,7 +90,7 @@ async def user_login(user: UserLogin):
             value=refresh_token,
             httponly=True,
             secure=config.set_cookie_secret,
-            samesite="none",
+            samesite=config.set_cookie_samesite,
             path="/",
             max_age=60 * 60 * 24 * 8
         )
@@ -111,7 +111,7 @@ async def user_login(user: UserLogin):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-@app.post("/api/create_user", tags=["User Management"])
+@app.post("/api/create_user", tags=["Auth"])
 async def create_user(user: UserCreate):
     """
     - 유저 신규 등록 API
@@ -132,5 +132,9 @@ async def create_user(user: UserCreate):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
-
+@app.get("/api/userinfo", tags=["Auth"])
+async def get_userinfo( user: UserInfo = Depends(auth.get_current_user)):
+    """
+    현재 로그인한 사용자 정보
+    """
+    return user

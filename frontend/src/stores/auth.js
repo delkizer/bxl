@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
     async fetchCurrentUser() {
       // 앱 로딩 시 유저 정보를 가져와 세션 상태 파악
       try {
-        const res = await apiClient.get('/api/me');
+        const res = await apiClient.get('/api/userinfo');
         this.user = res.data;
         this.isLoggedIn = true;
       } catch (err) {

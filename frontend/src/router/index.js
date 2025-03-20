@@ -12,11 +12,11 @@ const routes = [
 
     { path: '/login', name: 'login', component: LoginPage },
 
-    { path: '/coder',  name: 'coder', component: CoderPage },
+    { path: '/coder',  name: 'coder', component: CoderPage, meta: { requiresAuth: true } },
 
-    { path: '/scorer', name: 'scorer', component: ScorerPage },
+    { path: '/scorer', name: 'scorer', component: ScorerPage, meta: { requiresAuth: true } },
 
-    { path: '/gameinfo', name: 'gameinfo', component: GameInfoPage, },
+    { path: '/gameinfo', name: 'gameinfo', component: GameInfoPage, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

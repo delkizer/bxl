@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true, // 쿠키를 자동으로 주고받음
+  withCredentials: true,
 });
 
 // 요청 인터셉터 (예: 토큰 헤더 붙이는 경우 - HttpOnly면 자동 쿠키 전송되므로 생략 가능)

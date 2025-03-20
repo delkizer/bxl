@@ -63,3 +63,6 @@ class Config():
         cookie_secret_str = str(self.env("SET_COOKIE_SECURE") or "").strip().lower()
         return cookie_secret_str == "true"
 
+    @property
+    def set_cookie_samesite(self):
+        return self.env("SET_COOKIE_SAMESITE")
