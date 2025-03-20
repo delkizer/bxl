@@ -256,7 +256,6 @@ class Auth:
             return result
 
         except Exception as e:
-            session.rollback()
             self.logger.error(f"[find_user_in_db_by_email] Exception: {e}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -265,4 +264,54 @@ class Auth:
 
         finally:
             session.close()
+
+    def verify_refresh_token(self, token: str):
+        session = None
+        try:
+            with open(self.jwt_public_key, "r") as f:
+                public_key = f.read()
+
+            payload = jwt.decode(token, public_key, algorithms=[self.define_code.JWT_ALGORITHM])
+            if payload.get("type") != "refresh":
+                raise HTTPException( status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token" )
+
+            session = self.bxl_session_factory()
+            query = text("""
+                         SELECT token_expire_at
+                         FROM bxl.admin_users
+                         WHERE refresh_token = :token
+                         """)
+            result = session.execute(query, {'token': token}).mappings().all()
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail = "Refresh token not found or invalid"
+                )
+
+            # DB의 만료시간과 JWT의 exp가 일치하는지 추가로 비교
+            db_expire = result[0]["token_expire_at"]
+            token_exp = datetime.fromtimestamp(payload['exp'], timezone.utc)
+
+            if datetime.now(timezone.utc) > db_expire:
+                raise HTTPException( status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired" )
+
+            if datetime.now(timezone.utc) > token_exp:
+                raise HTTPException( status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token JWT expired" )
+
+            return payload
+
+        except JWTError as e:
+            self.logger.error(f"[verify_refresh_token] Exception: {e}", exc_info=True)
+            raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+        except Exception as e:
+            self.logger.error(f"[verify_refresh_token] Exception: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal database error."
+            )
+
+        finally:
+            if session is not None:
+                session.close()
 

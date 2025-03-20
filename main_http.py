@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path, Query, HTTPException, status, Depends
+from fastapi import FastAPI, Path, HTTPException, status, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -138,3 +138,38 @@ async def get_userinfo( user: UserInfo = Depends(auth.get_current_user)):
     현재 로그인한 사용자 정보
     """
     return user
+
+@app.post("/api/refresh_token", tags=["Auth"])
+async def refresh_token(request: Request):
+    """
+    사용자의 access 토큰을 재생성
+    """
+    refresh_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not provided")
+
+    try:
+        payload = auth.verify_refresh_token(refresh_token)
+        email = payload.get("email")
+
+        new_access_token = auth.get_jwt_token(email, config.jwt_sub)
+        response = JSONResponse({"msg": "access token refreshed"})
+        response.set_cookie(
+            key="access_token",
+            value=new_access_token,
+            httponly=True,
+            secure=config.set_cookie_secret,  # HTTPS 환경이라면 True
+            samesite=config.set_cookie_samesite,
+            path="/",
+            max_age=60 * 60 * 24  # 1일 등 원하는 유효기간
+        )
+
+        return response
+    except HTTPException as e:
+        response = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": e})
+        response.delete_cookie("refresh_token")
+        response.delete_cookie("access_token")
+        return response
+
+
