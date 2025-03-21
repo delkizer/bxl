@@ -21,7 +21,6 @@ class Auth:
         self.logger = logger
         self.define_code = DefineCode()
         self.utils = utils.Utils(self.logger)
-        self.config = Config()
         self.db = ConfigDB()
         self.bxl_session_factory = self.db.get_bxl_session_factory(self.config)
 

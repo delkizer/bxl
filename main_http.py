@@ -1,4 +1,9 @@
-from fastapi import FastAPI, Path, HTTPException, status, Depends, Request
+import uuid
+
+from pyexpat.errors import messages
+from typing import Optional
+
+from fastapi import FastAPI, Path, HTTPException, status, Depends, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -9,17 +14,21 @@ from class_config.class_define import Define
 
 from class_lib.api.base_model import UserLogin, UserCreate, UserInfo
 from class_lib.api.auth import Auth
+from class_lib.api.coder import Coder
 from define.define_code import DefineCode
 
 # 기본 클래스 설정
 config = Config()
 config_logger = ConfigLogger('http_log', 365)
-logger = config_logger.get_logger('fastapi')
+logger = config_logger.get_logger('auth')
 define = Define()
 define_code = DefineCode()
 db_config = ConfigDB()
-
 auth = Auth( logger )
+
+config_logger_coder = ConfigLogger('http_coder_log', 365)
+coder_logger = config_logger_coder.get_logger('coder')
+coder = Coder( coder_logger )
 
 # title, description 등 OpenAPI 문서용 설정을 줄 수 있음
 app = FastAPI(
@@ -172,4 +181,18 @@ async def refresh_token(request: Request):
         response.delete_cookie("access_token")
         return response
 
+@app.get("/api/gamelist", tags=["Coder"])
+async def get_gamelist(
+        request: Request,
+        game_date: Optional[str] = Query(None, description="필요하다면 게임 날짜 (YYYY-MM-DD)"),
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+        user : UserInfo = Depends(auth.get_current_user),
+):
+    """
+    - **tournament_uuid**: 필수 Path Param
+    - **game_date**: 필수 Path Param
+    """
+    result = coder.get_game_list(game_date, tournament_uuid)
+
+    return result
 

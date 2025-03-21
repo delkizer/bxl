@@ -19,7 +19,7 @@ export default {
   name: 'MainPage',
   methods: {
     goToCoderPage() {
-      this.$router.push('/coder');
+      this.$router.push('/coderlist');
     },
     goToScorerPage() {
       this.$router.push('/scorer');
