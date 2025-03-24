@@ -5,7 +5,7 @@
       <!-- 상단: "WARM UP" / "2:00" -->
       <div class="warmup-info">
         <h2>WARM UP</h2>
-        <div class="time">2:00</div>
+        <div class="time">{{ warmUpDisplay }}</div>
       </div>
 
       <!-- 팀명, 점수 배치 -->
@@ -32,9 +32,10 @@
     </div>
     <!-- 하단 버튼 3개 -->
     <div class="clock-buttons-row">
+      <!-- Warm Up Clock 버튼도 동적 시간 표기 -->
       <div class="clock-button">
         Warm Up Clock <br />
-        2:00
+        {{ warmUpDisplay }}
       </div>
       <div class="clock-button">
         Match Clock <br />
@@ -51,11 +52,11 @@
       <!-- 왼쪽 박스 (Hurricanes +1/-1 등) -->
       <div class="bottom-side-box">
         <div class="bottom-label-box left-box">
-          <div>Hurricanes</div>
+          <div>Hurricanes Score</div>
           <div class="btn">+1</div>
           <div class="btn">-1</div>
           <div class="wins-box">
-            <span>Wins</span>
+            <span>Wins : 0</span>
             <div class="spinner-buttons">
               <button class="arrow-btn" @click="incrementWins">▲</button>
               <button class="arrow-btn" @click="decrementWins">▼</button>
@@ -75,9 +76,9 @@
         <div class="clock-setting-container">
           <!-- 왼쪽 +버튼 컬럼 -->
           <div class="side-buttons-col plus-buttons">
-            <button>+1</button>
-            <button>+5</button>
-            <button>+10</button>
+            <button @click="changeWarmUpTime(1)">+1</button>
+            <button @click="changeWarmUpTime(5)">+5</button>
+            <button @click="changeWarmUpTime(10)">+10</button>
           </div>
 
           <!-- 중앙 라벨 -->
@@ -87,16 +88,16 @@
 
           <!-- 오른쪽 -버튼 컬럼 -->
           <div class="side-buttons-col minus-buttons">
-            <button>-1</button>
-            <button>-5</button>
-            <button>-10</button>
+            <button @click="changeWarmUpTime(-1)">-1</button>
+            <button @click="changeWarmUpTime(-5)">-5</button>
+            <button @click="changeWarmUpTime(-10)">-10</button>
           </div>
         </div>
 
         <!-- Start/Reset 버튼 행 -->
         <div class="start-reset-row">
           <button>Start</button>
-          <button>Reset</button>
+          <button @click="resetWarmUpTime">Reset</button>
         </div>
         <!-- 하단 게임 번호 라벨 행 -->
         <div class="game-labels-row">
@@ -112,11 +113,11 @@
       <!-- 오른쪽 박스 (Rockets +1/-1 등) -->
       <div class="bottom-side-box">
         <div class="bottom-label-box right-box">
-          <div>Rockets</div>
+          <div>Rockets Score</div>
           <div class="btn">+1</div>
           <div class="btn">-1</div>
           <div class="wins-box">
-            <span>Wins</span>
+            <span>Wins: 0</span>
             <div class="spinner-buttons">
               <button class="arrow-btn" @click="incrementWins">▲</button>
               <button class="arrow-btn" @click="decrementWins">▼</button>
@@ -138,10 +139,73 @@
 </template>
 
 <script>
+import {useCoderStore} from "@/stores/coder.js";
+
 export default {
   name: "CoderPage", // 공식 프로젝트 이름
-  // 지금은 단순 레이블이므로 별도 데이터는 없어도 됨
-  // 향후 data, methods, computed 등을 추가하여 기능 구현
+  data() {
+    return {
+      warmUpTime: 120,
+      warmUpDefaultTime: 120,
+      socket: null,
+      serverMessage: "",
+    }
+  },
+  computed: {
+    // 120초 → "2:00" 형태로 변환하기 위한 계산 속성
+    warmUpDisplay() {
+      // mm:ss 형태로 포매팅
+      const minutes = Math.floor(this.warmUpTime / 60);
+      const seconds = this.warmUpTime % 60;
+      // 두 자리로 맞춰주기
+      const secString = seconds < 10 ? "0" + seconds : seconds;
+      return `${minutes}:${secString}`;
+    }
+  },
+  mounted() {
+    this.initWebSocket();
+    const coderStore = useCoderStore();
+    const tieNo = coderStore.tieNo;
+    const gameDate = coderStore.gameDate;
+    const wsUrl = `${import.meta.env.VITE_WEBSOCKET_URL}/${gameDate}/${tieNo}`
+    this.socket = new WebSocket(wsUrl);
+
+
+  },
+  methods: {
+    initWebSocket() {
+      this.socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
+      this.socket.onopen = () => {
+        console.log("WebSocket connected");
+        // 테스트 메시지
+        this.socket.send("Hello from Vue!");
+      };
+
+      this.socket.onmessage = (event) => {
+        //console.log("Message from server:", event.data);
+        this.serverMessage = event;
+      };
+
+      this.socket.onerror = (err) => {
+        console.error("WebSocket error:", err);
+      };
+
+      this.socket.onclose = (evt) => {
+        console.log("WebSocket closed", evt);
+      };
+    },
+    // Warm Up Clock 시간을 변경(+/-)하는 메서드
+    changeWarmUpTime(amount) {
+      this.warmUpTime += amount;
+      // 만약 0초 아래로 내려가지 않게 하려면 아래와 같이 처리
+      if (this.warmUpTime < 0) {
+        this.warmUpTime = 0;
+      }
+    },
+    resetWarmUpTime() {
+      this.warmUpTime = this.warmUpDefaultTime;
+    },
+  },
 };
 </script>
 
