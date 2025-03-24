@@ -5,4 +5,5 @@ export default {
   getGameList(params = {}) {
     return apiClient.get('/api/gamelist', { params })
   },
+
 }

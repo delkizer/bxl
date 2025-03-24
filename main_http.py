@@ -12,9 +12,10 @@ from class_config.class_log import ConfigLogger
 from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 
-from class_lib.api.base_model import UserLogin, UserCreate, UserInfo
+from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo
 from class_lib.api.auth import Auth
 from class_lib.api.coder import Coder
+from class_lib.api.tour import Tour
 from define.define_code import DefineCode
 
 # 기본 클래스 설정
@@ -29,6 +30,11 @@ auth = Auth( logger )
 config_logger_coder = ConfigLogger('http_coder_log', 365)
 coder_logger = config_logger_coder.get_logger('coder')
 coder = Coder( coder_logger )
+
+config_logger_coder = ConfigLogger('http_tour_log', 365)
+tour_logger = config_logger_coder.get_logger('tour')
+tour = Tour( tour_logger )
+
 
 # title, description 등 OpenAPI 문서용 설정을 줄 수 있음
 app = FastAPI(
@@ -196,3 +202,24 @@ async def get_gamelist(
 
     return result
 
+@app.post("/api/tourpage", tags=["Tournament"])
+async def create_tourpage(
+        request: Request,
+        tour_info: TourInfo,
+):
+    """
+
+    """
+    result = tour.create_tour(tour_info)
+    return result
+
+@app.get("/api/nationlist", tags=["Tournament"])
+async def get_nationlist(
+        request: Request,
+):
+    """
+    :param request: None
+    :return: 국가코드 : 국가이름 리스트
+    """
+    result = tour.nation_list()
+    return result

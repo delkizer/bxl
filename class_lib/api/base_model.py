@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -38,3 +39,33 @@ class GetSessionInfo(BaseModel):
     Field_ShortName: Optional[str]
     League_ShortName: Optional[str]
     SessionStartedLocal: Optional[str]
+
+class TourInfo(BaseModel):
+    tournament_uuid: Optional[uuid.UUID] = None
+    tournament_title: Optional[str] = Field(...,description="대회 이름",example="BDMNTN XL")
+    nation_code: str = Field(...,description="국가 코드 (예: KR, US, JP 등)",example="KR")
+    city_name: Optional[str] = Field(
+        None,
+        description="도시 이름",
+        example="서울"
+    )
+    stadium_name: Optional[str] = Field(
+        None,
+        description="경기장 이름",
+        example="장충체육관"
+    )
+    is_bxl: Optional[bool] = Field(
+        None,
+        description="BXL 여부 (Y/N 등)",
+        example="Y"
+    )
+    start_date: Optional[str] = Field(
+        None,
+        description="대회 시작 날짜 (yyyy-mm-dd 형식)",
+        example="2025-01-01"
+    )
+    end_date: Optional[str] = Field(
+        None,
+        description="대회 종료 날짜 (yyyy-mm-dd 형식)",
+        example="2025-01-10"
+    )

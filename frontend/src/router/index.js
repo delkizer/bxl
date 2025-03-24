@@ -5,6 +5,7 @@ import CoderPage from '@/components/CoderPage.vue'
 import CoderList from '@/components/CoderList.vue'
 import ScorerPage from '@/components/ScorerPage.vue'
 import GameInfoPage from "@/components/GameInfoPage.vue";
+import TourPage from "@/components/TourPage.vue";
 import LoginPage from "@/components/Login.vue";
 import {useAuthStore} from "@/stores/auth";
 
@@ -19,6 +20,8 @@ const routes = [
   { path: '/scorer', name: 'scorer', component: ScorerPage, meta: { requiresAuth: true } },
 
   { path: '/gameinfo', name: 'gameinfo', component: GameInfoPage, meta: { requiresAuth: true } },
+
+  { path: '/tourpage', name: 'tourpage', component: TourPage, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
