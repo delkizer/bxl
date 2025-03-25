@@ -12,9 +12,10 @@ from class_config.class_log import ConfigLogger
 from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 
-from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo
+from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo, TeamAndPlayerInfo
 from class_lib.api.auth import Auth
 from class_lib.api.coder import Coder
+from class_lib.api.team import Team
 from class_lib.api.tour import Tour
 from define.define_code import DefineCode
 
@@ -31,9 +32,13 @@ config_logger_coder = ConfigLogger('http_coder_log', 365)
 coder_logger = config_logger_coder.get_logger('coder')
 coder = Coder( coder_logger )
 
-config_logger_coder = ConfigLogger('http_tour_log', 365)
+config_logger_tour = ConfigLogger('http_tour_log', 365)
 tour_logger = config_logger_coder.get_logger('tour')
 tour = Tour( tour_logger )
+
+config_logger_team = ConfigLogger('http_team_log', 365)
+team_logger = config_logger_team.get_logger('team')
+team = Team( team_logger )
 
 
 # title, description 등 OpenAPI 문서용 설정을 줄 수 있음
@@ -234,4 +239,16 @@ async def get_tourlist(
     :return: 현재 BXL에 해당하는 대뢰 리스트 리턴
     """
     result = tour.tour_list(tournament_uuid)
+    return result
+
+@app.post("/api/teampage", tags=["Team"])
+async def get_teampage(
+        request: Request,
+        team_player_info: TeamAndPlayerInfo,
+):
+    """
+    :param request:
+    :return: 현재 BXL 대회에 참여한 팀 리스트 노출
+    """
+    result = team.create_team_and_player(team_player_info)
     return result

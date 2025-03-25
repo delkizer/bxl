@@ -17,9 +17,9 @@
       <p>BXL</p>
       <p>Tour's Page</p>
     </div>
-    <div class="button game-button" @click="goToGamePage">
+    <div class="button team-button" @click="goToGamePage">
       <p>BXL</p>
-      <p>Game's Page</p>
+      <p>Team's Page</p>
     </div>
   </div>
 </template>
@@ -126,7 +126,7 @@ export default {
   margin-right: 40px;
 }
 
-.game-button {
+.team-button {
   background-color: #FFC107;
   color: black;
   margin-left: 40px;

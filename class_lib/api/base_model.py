@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 class UserLogin(BaseModel):
@@ -69,3 +69,51 @@ class TourInfo(BaseModel):
         description="대회 종료 날짜 (yyyy-mm-dd 형식)",
         example="2025-01-10"
     )
+
+class PlayerInfo(BaseModel):
+    """
+    개별 플레이어 정보를 나타내는 모델
+    """
+    player_uuid: Optional[uuid.UUID] = None
+    player_name: str = Field(
+        ...,
+        description="플레이어 이름",
+        example="Eko Yuli"
+    )
+    gender: str = Field(
+        ...,
+        description="플레이어 성별(예: 'M', 'F')",
+        example="M"
+    )
+
+class TeamAndPlayerInfo(BaseModel):
+    """
+    팀과 플레이어 정보를 한 번에 받기 위한 Pydantic 모델
+    - 'team_code'가 없으면 새 팀을 생성할 수도 있고,
+    - 이미 존재하는 'team_code'가 있다면 해당 팀에 플레이어를 등록 또는 업데이트
+    """
+    tournament_uuid: uuid.UUID = Field(
+        ...,
+        description="해당 팀과 플레이어가 속한 대회(Tournament)의 고유 식별자(UUID).",
+        example="d290f1ee-6c54-4b01-90e6-d701748f0851"
+    )
+    team_name: str = Field(
+        ...,
+        description="팀 이름. 동일한 국적(nation_code) 내에서는 중복될 수 없습니다.",
+        example="Warriors"
+    )
+    nation_code: str = Field(
+        ...,
+        description="팀의 국적을 나타내는 2~4글자 코드(예: 'KOR', 'USA', etc.).",
+        example="KOR"
+    )
+    team_code: Optional[int] = Field(
+        None,
+        description="team_info 테이블의 PK(고유번호). 값을 주지 않으면 새로 팀이 생성될 수 있습니다.",
+        example=1
+    )
+    players_info: List[PlayerInfo] = Field(
+        ...,
+        description="하나의 플레이어 정보를 나타내는 중첩 객체"
+    )
+
