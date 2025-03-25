@@ -223,3 +223,15 @@ async def get_nationlist(
     """
     result = tour.nation_list()
     return result
+
+@app.get("/api/tourlist", tags=["Tournament"])
+async def get_tourlist(
+        request: Request,
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+):
+    """
+    :param request: None
+    :return: 현재 BXL에 해당하는 대뢰 리스트 리턴
+    """
+    result = tour.tour_list(tournament_uuid)
+    return result

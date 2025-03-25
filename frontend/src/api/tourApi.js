@@ -7,6 +7,9 @@ export default {
   },
   postTourPage(params = {}) {
     return apiClient.post('/api/tourpage', params)
+  },
+  getTourList(params = {}) {
+    return apiClient.get('/api/tourlist', {params})
   }
 
 }

@@ -12,6 +12,16 @@
       </div>
     </div>
   </div>
+    <div class="buttons-wrapper additional-buttons">
+    <div class="button tour-button" @click="goToTourPage">
+      <p>BXL</p>
+      <p>Tour's Page</p>
+    </div>
+    <div class="button game-button" @click="goToGamePage">
+      <p>BXL</p>
+      <p>Game's Page</p>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -24,6 +34,12 @@ export default {
     goToScorerPage() {
       this.$router.push('/scorer');
     },
+    goToTourPage() {
+      this.$router.push('/tourlist')
+    },
+    goToGamePage() {
+      this.$router.push('/gamelist')
+    }
   }
 }
 </script>
@@ -51,7 +67,7 @@ export default {
 
 .buttons-wrapper {
   position: fixed;
-  top: 50%;
+  top: 30%;
   left: 0;
   right: 0;
   display: flex;
@@ -59,9 +75,21 @@ export default {
   transform: translateY(-50%);
 }
 
+.additional-buttons {
+  /* 새로 추가된 버튼 영역 스타일 */
+  position: fixed;
+  top: 65%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  transform: translateY(-50%);
+}
+
+
 .button {
-  width: 400px;
-  height: 300px;
+  width: 300px;
+  height: 275px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -92,6 +120,20 @@ export default {
   margin-left: 40px;
 }
 
+.tour-button {
+  background-color: #4CAF50;
+  color: black;
+  margin-right: 40px;
+}
+
+.game-button {
+  background-color: #FFC107;
+  color: black;
+  margin-left: 40px;
+}
+
+
+
 /* 화면이 작을 때 */
 @media screen and (max-width: 960px) {
   .buttons-wrapper {
@@ -108,4 +150,5 @@ export default {
     margin-left: 0;
   }
 }
+
 </style>

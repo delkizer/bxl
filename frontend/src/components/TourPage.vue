@@ -29,7 +29,7 @@
           <input
             ref="startDateInput"
             type="date"
-            id="starstart_date"
+            id="start_date"
             class="form-control"
             v-model="start_date"
           />
@@ -156,6 +156,12 @@ export default {
     };
   },
   async mounted() {
+    this.existingUuid = this.$route.params.uuid;
+    if (this.existingUuid) {
+      // 수정 모드로 간주
+      await this.loadTournamentData(this.existingUuid);
+    }
+
     try {
       const response = await tourApi.getNationList({})
       this.nationList = response.data;
@@ -164,6 +170,7 @@ export default {
     }
   },
   methods: {
+
     handleExitConfirm() {
       this.showExitModal = false
       this.$router.push('/')
@@ -175,6 +182,7 @@ export default {
       try{
         this.showSaveModal = false
         const response = await  tourApi.postTourPage({
+          "tournament_uuid": this.$route.params.uuid,
           "tournament_title":  this.tournament_title,
           "start_date":  this.start_date,
           "end_date":  this.end_date,
@@ -226,8 +234,31 @@ export default {
       } else if (!this.stadium_name) {
         this.$refs.stadiumInput.focus();
       }
-    }
-  }
+    },
+    async loadTournamentData(uuid) {
+      console.log(uuid)
+      try {
+        const response = await tourApi.getTourList({ tournament_uuid: uuid });
+        // 받은 데이터로 폼에 반영
+        const data = response.data;
+        const item = data[0];  // 배열의 첫 번째 객체
+
+        // 폼에 반영할 때, 필드명이 맞도록 주의하여 할당
+        this.tournament_title = item.tournament_title;
+        this.start_date       = item.start_date;
+        this.end_date         = item.end_date;
+        // 기존에는 nation_code를 사용했으나, 반환값이 nation_name만 주어진다면
+        // 이를 어떻게 처리할지 결정해야 합니다(예: 그대로 이름을 저장하거나, 직접 코드로 변환).
+        this.nation_code      = item.nation_code;
+        this.city_name        = item.city_name;
+
+        // stadium_name은 응답에 없으므로, 필요하면 기본값으로 세팅
+        this.stadium_name     = item.stadium_name;
+      } catch(e) {
+        console.error('기존 대회 불러오기 실패:', e);
+      }
+    },
+  },
 };
 </script>
 
