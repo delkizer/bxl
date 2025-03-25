@@ -1,5 +1,6 @@
 import uuid
 
+from starlette import status
 from fastapi import HTTPException
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError
@@ -19,10 +20,77 @@ class Team:
         self.define_code = DefineCode()
         self.utils = Utils(self.logger)
         self.db = ConfigDB()
-        self.bxl_sesstion_factory = self.db.get_bxl_session_factory(self.config)
+        self.bxl_session_factory = self.db.get_bxl_session_factory(self.config)
+
+    def get_player_list(self, team_code: str):
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+                SELECT A.team_code, A.team_name, A.nation_code, A.tournament_uuid
+                , B.player_uuid, B.player_name, trim(B.gender) as gender
+                FROM bxl.team_info A
+                LEFT OUTER JOIN bxl.player_info B ON A.team_code = B.team_code
+                WHERE A.team_code = :team_code
+            """)
+            result = session.execute(query, {
+                "team_code": team_code
+            }).mappings().all()
+
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Team not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return result
+
+        except HTTPException as http_exc:
+            # HTTPException을 그대로 재전달
+            raise http_exc
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"User creation failed: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        finally:
+            session.close()
+
+    def get_team_list(self):
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+                SELECT A.tournament_title, A.city_name, A.start_date, A.end_date
+                , B.team_code, B.team_name, C.code_desc
+                , ( SELECT count(*) FROM bxl.player_info pi WHERE pi.team_code = B.team_code) as player_cnt
+                FROM bxl.tournament_info A
+                INNER JOIN bxl.team_info B ON A.tournament_uuid = B.tournament_uuid
+                INNER JOIN bxl.code_info C ON B.nation_code = C.code
+                WHERE A.is_bxl = true            
+            """)
+            result = session.execute(query).mappings().all()
+
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return result
+
+        except HTTPException as http_exc:
+            # HTTPException을 그대로 재전달
+            raise http_exc
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"User creation failed: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        finally:
+            session.close()
+
 
     def create_team_and_player(self, team_player_info: TeamAndPlayerInfo):
-        session = self.bxl_sesstion_factory()
+        session = self.bxl_session_factory()
         try:
             if team_player_info.team_code is None:
                 # 새 팀 INSERT

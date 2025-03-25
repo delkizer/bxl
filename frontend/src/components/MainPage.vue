@@ -38,7 +38,7 @@ export default {
       this.$router.push('/tourlist')
     },
     goToGamePage() {
-      this.$router.push('/gamelist')
+      this.$router.push('/teamlist')
     }
   }
 }

@@ -182,7 +182,6 @@ export default {
       try{
         this.showSaveModal = false
         const response = await  tourApi.postTourPage({
-          "tournament_uuid": this.$route.params.uuid,
           "tournament_title":  this.tournament_title,
           "start_date":  this.start_date,
           "end_date":  this.end_date,

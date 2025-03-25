@@ -2,16 +2,18 @@
   <div class="tour-list-container">
     <section class="tour-list">
       <div
-        v-for="tour in tour_list"
-        :key="tour.tournament_uuid"
+        v-for="team in team_list"
+        :key="team.team_code"
         class="tour-item"
-        @click="selectTour( tour )"
+        @click="selectTour( team )"
       >
         <!-- 상단에는 TIE 번호와 날짜 표시 -->
-        <h3>{{ tour.tournament_title }} </h3>
-        <!-- 팀명, 국가코드, 점수를 원하는 형태로 구성 -->
+        <p> {{team.start_date}}
+          {{ team.tournament_title }}
+          {{team.nation_name}} {{team.city_name}} :
+        </p>
         <p>
-          {{tour.nation_name}} {{tour.city_name}} {{tour.start_date}} - {{tour.end_date}}
+          {{team.team_name}} ( {{team.player_cnt}}명 )
         </p>
       </div>
     </section>
@@ -25,20 +27,19 @@
 </template>
 
 <script>
-import tourApi from '@/api/tourApi.js';
+import teamApi from '@/api/teamApi.js';
 
 export default {
-  name: 'TourList',
+  name: 'TeamList',
   data() {
     return {
-      // TIE 목록 예시
-      tour_list: [],
+      team_list: [],
      }
   },
   async mounted() {
     try {
-      const response = await tourApi.getTourList({})
-      this.tour_list = response.data
+      const response = await teamApi.getTeamList()
+      this.team_list = response.data
     } catch ( error ) {
       console.error(error);
     }
@@ -55,10 +56,10 @@ export default {
     },
     goPage() {
       // 이전 화면으로
-      this.$router.push('/tourpage');
+      this.$router.push('/teampage');
     },
-    selectTour(tour) {
-      this.$router.push(`/tourpage/${tour.tournament_uuid}`);
+    selectTour(team) {
+      this.$router.push(`/teampage/${team.team_code}`);
     },
   },
 }

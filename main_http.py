@@ -248,7 +248,30 @@ async def get_teampage(
 ):
     """
     :param request:
-    :return: 현재 BXL 대회에 참여한 팀 리스트 노출
+    :return: 현재 BXL 대회에 참여한 팀 구성
     """
     result = team.create_team_and_player(team_player_info)
+    return result
+
+@app.get("/api/teamlist", tags=["Team"])
+async def get_teamlist(
+        request: Request,
+):
+    """
+    :param request:
+    :return: 각각의 BXL 대회에 참가한 팀 리스트 노출
+    """
+    result = team.get_team_list()
+    return result
+
+@app.get("/api/teams/{team_code}/players", tags=["Team"])
+async def get_playerlist(
+        request: Request,
+        team_code: str = Path(..., description="선수가 속한 팀 코드")
+):
+    """
+    :param request:
+    :return: 각 팀에 속한 선수리스트
+    """
+    result = team.get_player_list(team_code)
     return result
