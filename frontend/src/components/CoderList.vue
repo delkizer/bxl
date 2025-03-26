@@ -36,6 +36,7 @@
     </section>
     <!-- 하단/우측 액션 -->
     <footer class="tie-footer">
+      <button @click="goTie">새로등록</button>
       <button @click="goBack">뒤로가기</button>
       <button @click="goHome">메인가기</button>
     </footer>
@@ -99,6 +100,9 @@ export default {
     },
     goHome() {
       this.$router.push('/')
+    },
+    goTie() {
+      this.$router.push('/codertie')
     },
     selectTie(tie) {
       const coderStore = useCoderStore()

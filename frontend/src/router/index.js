@@ -2,6 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainPage from '@/components/MainPage.vue'
 import CoderPage from '@/components/CoderPage.vue'
+import CoderTie from '@/components/CoderTie.vue'
 import CoderList from '@/components/CoderList.vue'
 import ScorerPage from '@/components/ScorerPage.vue'
 import GameInfoPage from "@/components/GameInfoPage.vue";
@@ -19,6 +20,7 @@ const routes = [
 
   { path: '/coder',  name: 'coder', component: CoderPage, meta: { requiresAuth: true } },
   { path: '/coderlist', name: 'coderlist', component: CoderList, meta: { requiresAuth: true } },
+  { path: '/codertie', name: 'codertie', component: CoderTie, meta: { requiresAuth: true } },
 
   { path: '/scorer', name: 'scorer', component: ScorerPage, meta: { requiresAuth: true } },
 

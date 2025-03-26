@@ -1,6 +1,5 @@
 <template>
   <div class="main-container">
-    <div class="centered-line"></div>
     <div class="buttons-wrapper">
       <div class="button corder-button" @click="goToCoderPage">
         <p>BXL</p>
@@ -51,18 +50,6 @@ export default {
   background-color: #4b7cb6;
   position: relative;
   overflow: hidden;
-}
-
-/* 가시적 중앙선(테스트용, 필요없으면 제거) */
-.centered-line {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: 100%;
-  background-color: rgba(255, 0, 0, 0.3);
-  z-index: 10;
-  pointer-events: none;
 }
 
 .buttons-wrapper {

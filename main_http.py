@@ -207,6 +207,15 @@ async def get_gamelist(
 
     return result
 
+@app.get("/api/matchtype/list", tags=["Tournament"])
+async def get_matchtype_list(
+        request: Request,
+):
+    result = tour.get_matchtype_list()
+
+    return result
+
+
 @app.post("/api/tourpage", tags=["Tournament"])
 async def create_tourpage(
         request: Request,
@@ -275,3 +284,4 @@ async def get_playerlist(
     """
     result = team.get_player_list(team_code)
     return result
+

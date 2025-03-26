@@ -166,3 +166,33 @@ class Tour:
             raise HTTPException(status_code=500, detail="Internal server error")
         finally:
             session.close()
+
+    def get_matchtype_list(self):
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+            SELECT code, code_desc AS match_type
+              FROM bxl.code_info
+             WHERE code_group = 'match_type'
+             """)
+            result = session.execute(query).mappings().all()
+
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return result
+
+        except HTTPException as http_exc:
+            # HTTPException을 그대로 재전달
+            raise http_exc
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"User creation failed: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        finally:
+            session.close()
+
