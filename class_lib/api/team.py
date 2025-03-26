@@ -99,28 +99,95 @@ class Team:
                 # 기존 팀 UPDATE
                 new_team_code = self._update_team(session, team_player_info)
 
-            for player in team_player_info.players_info:
-                if player.player_uuid is None:
-                    # player_uuid가 없으면 새로 INSERT
+            existing_players = self._team_player_list(
+                session,
+                team_player_info.team_code if team_player_info.team_code else new_team_code
+            )
+            # RowMapping -> dict 형태의 map { player_uuid: RowMapping }
+            existing_players_map = {
+                p["player_uuid"]: p for p in existing_players if p["player_uuid"]
+            }
+
+            incoming_uuids = {p.player_uuid for p in team_player_info.players_info if p.player_uuid}
+
+            #DB에는 있으나 새 요청에 없는 uuid들 → 삭제
+            for old_uuid, old_player_obj in existing_players_map.items():
+                if old_uuid not in incoming_uuids:
+                    # (1) game_player_info 삭제
+                    self._delete_game_player(session, new_team_code, old_uuid)
+
+                    # (2) player_info 삭제
+                    self._delete_player(session, new_team_code, old_uuid)
+
+                    # (3) 히스토리 테이블 기록 (DELETE)
+                    deleted_player_info = PlayerInfo(
+                        player_uuid=old_uuid,
+                        player_name=old_player_obj["player_name"],
+                        gender=old_player_obj["gender"]
+                    )
+                    self._insert_player_history(
+                        session=session,
+                        dml_type="DELETE",
+                        team_code=new_team_code,
+                        tournament_uuid=old_player_obj["tournament_uuid"],
+                        player=deleted_player_info
+                    )
+
+            for player_info in team_player_info.players_info:
+                if not player_info.player_uuid:
+                    # a) player_uuid 없는 신규 -> INSERT
                     new_player_uuid = self._insert_player(
                         session=session,
                         team_code=new_team_code,
                         tournament_uuid=team_player_info.tournament_uuid,
-                        player=player
+                        player=player_info
                     )
-                    # 필요하다면 new_player_uuid를 player.player_uuid에 할당
-                    player.player_uuid = new_player_uuid
-                else:
-                    # player_uuid가 있으면 UPDATE
-                    updated_count = self._update_player(
+                    player_info.player_uuid = new_player_uuid
+
+                    # 히스토리 기록
+                    self._insert_player_history(
                         session=session,
+                        dml_type="INSERT",
                         team_code=new_team_code,
                         tournament_uuid=team_player_info.tournament_uuid,
-                        player=player
+                        player=player_info
                     )
-                    # 혹은 업데이트된 행이 없는 경우 에러 처리 등도 가능:
-                    if updated_count == 0:
-                        raise HTTPException(status_code=404, detail=f"Player not found: {player.player_uuid}")
+                else:
+                    # b) player_uuid가 있고 DB에도 존재하면 -> UPDATE
+                    if player_info.player_uuid in existing_players_map:
+                        self._update_player(
+                            session=session,
+                            team_code=new_team_code,
+                            tournament_uuid=team_player_info.tournament_uuid,
+                            player=player_info
+                        )
+
+                        # 히스토리 기록 (UPDATE)
+                        self._insert_player_history(
+                            session=session,
+                            dml_type="UPDATE",
+                            team_code=new_team_code,
+                            tournament_uuid=team_player_info.tournament_uuid,
+                            player=player_info
+                        )
+                    else:
+                        # c) player_uuid는 있으나 DB에 없는 경우 -> INSERT
+                        new_player_uuid = self._insert_player(
+                            session=session,
+                            team_code=new_team_code,
+                            tournament_uuid=team_player_info.tournament_uuid,
+                            player=player_info
+                        )
+                        player_info.player_uuid = new_player_uuid
+
+                        # 히스토리 기록 (INSERT)
+                        self._insert_player_history(
+                            session=session,
+                            dml_type="INSERT",
+                            team_code=new_team_code,
+                            tournament_uuid=team_player_info.tournament_uuid,
+                            player=player_info
+                        )
 
             session.commit()
             return {"msg": "team and player created successfully"}
@@ -142,6 +209,15 @@ class Team:
             raise HTTPException(status_code=500, detail="Internal server error")
         finally:
             session.close()
+
+    def _team_player_list(self, session, team_code):
+        query = text("""
+            SELECT player_uuid, tournament_uuid, player_name, gender
+            FROM bxl.player_info
+            WHERE team_code = :team_code
+         """)
+        result = session.execute(query, {"team_code": team_code}).mappings().all()
+        return result
 
     def _insert_team(self, session, team_player_info: TeamAndPlayerInfo) -> int:
         insert_sql = text("""
@@ -219,3 +295,37 @@ class Team:
             "gender": player.gender
         })
         return result.rowcount
+
+    def _delete_player(self, session, team_code: int, player_uuid: uuid.UUID):
+        delete_sql = text("""
+                DELETE FROM bxl.player_info WHERE team_code = :team_code AND player_uuid = :player_uuid
+                """)
+        result = session.execute(delete_sql, {"team_code": team_code, "player_uuid": player_uuid})
+        return result
+
+    def _delete_game_player(self, session, team_code: int, player_uuid: uuid.UUID):
+        delete_sql = text("""
+                DELETE FROM bxl.game_player_info WHERE team_code = :team_code AND player_uuid = :player_uuid
+                """)
+        result = session.execute(delete_sql, {"team_code": team_code, "player_uuid": player_uuid})
+        return result
+
+
+    def _insert_player_history(self, session
+                               ,dml_type, team_code: int, tournament_uuid: uuid.UUID, player: PlayerInfo ):
+        insert_sql = text("""
+                          INSERT INTO bxl.player_history
+                              (dml_type, player_uuid, team_code, tournament_uuid, player_name, gender)
+                          VALUES (:dml_type, :player_uuid, :team_code, :tournament_uuid, :player_name,
+                                  :gender) 
+                          """)
+
+        result = session.execute(insert_sql, {
+            "dml_type": dml_type,
+            "player_uuid": player.player_uuid,
+            "team_code": team_code,
+            "tournament_uuid": tournament_uuid,
+            "player_name": player.player_name,
+            "gender": player.gender
+        })
+        return result
