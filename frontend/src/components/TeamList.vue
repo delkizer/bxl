@@ -1,5 +1,17 @@
 <template>
   <div class="tour-list-container">
+    <!-- 대회 배열을 순회해 옵션 생성 -->
+    <select v-model="selectedTour" @change="filterTour">
+      <option value=""></option>
+      <option
+        v-for="(tour, index) in tourList"
+        :key="index"
+        :value="tour.tournament_uuid"
+      >
+        {{tour.tournament_title}}
+      </option>
+    </select>
+
     <section class="tour-list">
       <div
         v-for="team in team_list"
@@ -28,18 +40,27 @@
 
 <script>
 import teamApi from '@/api/teamApi.js';
+import tourApi from '@/api/tourApi.js';
 
 export default {
   name: 'TeamList',
   data() {
     return {
-      team_list: [],
+      selectedTour: "",
+      tourList: [],
+      allTeams: [],    // 팀 전체 목록(백업용)
+      team_list: [],   // 현재 화면에 보이는 팀 목록
      }
   },
   async mounted() {
     try {
       const response = await teamApi.getTeamList()
       this.team_list = response.data
+      this.allTeams = response.data
+
+      const response2 = await tourApi.getTourList()
+      this.tourList = response2.data
+
     } catch ( error ) {
       console.error(error);
     }
@@ -47,6 +68,22 @@ export default {
   computed: {
   },
   methods: {
+    filterTour() {
+      console.log(this.selectedTour)
+      if (!this.selectedTour ) {
+        this.team_list = this.allTeams;
+      }
+
+      if (this.selectedTour === '') {
+        this.team_list = this.allTeams;
+      }
+      else {
+        // 빈 값이 아닐 때 필터 로직
+        this.team_list = this.allTeams.filter(
+          team => team.tournament_uuid === this.selectedTour
+        );
+      }
+    },
     goBack() {
       // 이전 화면으로
       this.$router.go(-1);

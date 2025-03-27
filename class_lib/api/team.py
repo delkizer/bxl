@@ -59,7 +59,8 @@ class Team:
         session = self.bxl_session_factory()
         try:
             query = text("""
-                SELECT A.tournament_title, A.city_name, A.start_date, A.end_date
+                SELECT A.tournament_title, A.tournament_uuid
+                , A.city_name, A.start_date, A.end_date
                 , B.team_code, B.team_name, C.code_desc
                 , ( SELECT count(*) FROM bxl.player_info pi WHERE pi.team_code = B.team_code) as player_cnt
                 FROM bxl.tournament_info A
