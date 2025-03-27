@@ -1,6 +1,26 @@
 <template>
   <div class="game-info-page">
     <div class="form-container">
+      <div class="form-row">
+        <div class="form-group left">
+          <label>대회 선택</label>
+        </div>
+        <div class="form-group middle">
+          <!-- 대회 배열을 순회해 옵션 생성 -->
+          <select class="form-control" v-model="selectedTour">
+            <option value=""></option>
+            <option
+              v-for="(tour, index) in tourList"
+              :key="index"
+              :value="tour.tournament_uuid"
+            >
+              {{tour.tournament_title}}
+            </option>
+          </select>
+
+        </div>
+      </div>
+
       <!-- 팀 이름 입력 -->
       <div class="form-row">
         <div class="form-group left">
@@ -11,19 +31,6 @@
         </div>
       </div>
 
-      <!-- 국가 선택 -->
-      <div class="form-row">
-        <div class="form-group left">
-          <label>팀국가</label>
-        </div>
-        <div class="form-group middle">
-          <select class="form-control" v-model="selectedCountry">
-            <option v-for="nation in nations" :key="nation.code" :value="nation.code.trim()">
-              {{ nation.code_desc }}
-            </option>
-          </select>
-        </div>
-      </div>
 
       <!-- 선수 정보 (반복) -->
       <div class="form-row">
@@ -52,20 +59,59 @@
             </div>
             <button class="btn btn-cancel small" @click="removePlayer(index)">-</button>
           </div>
+
           <div class="player-row">
             <div class="form-group middle">
               <input
                 class="form-control"
-                v-model="newPlayer.player_name"
-                placeholder="이름 입력"
+                v-model="newPlayer.first_name"
+                placeholder="퍼스트 이름"
               />
             </div>
-            <div class="form-group right">
-              <select class="form-control" v-model="newPlayer.gender">
-                <option value="M">남</option>
-                <option value="W">여</option>
-              </select>
+            <div class="form-group middle">
+              <input
+                class="form-control"
+                v-model="newPlayer.family_name"
+                placeholder="패밀리 이름"
+              />
             </div>
+            <div class="form-group middle">
+              <input
+                class="form-control"
+                v-model="newPlayer.nick_name"
+                placeholder="닉네임"
+              />
+            </div>
+          </div>
+          <div class="form-group middle">
+            <select class="form-control" v-model="newPlayer.nation_code">
+              <option value="">국가선택</option>
+              <option v-for="nation in nations" :key="nation.code" :value="nation.code.trim()">
+                {{ nation.code_desc }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group right">
+            <select class="form-control" v-model="newPlayer.gender">
+              <option value="">성별</option>
+              <option value="M">남</option>
+              <option value="W">여</option>
+            </select>
+          </div>
+          <div class="form-group middle">
+            <select class="form-control" v-model="newPlayer.hand">
+              <option value="">핸드</option>
+              <option value="right">오른손</option>
+              <option value="left">왼손</option>
+            </select>
+          </div>
+          <div class="form-group middle">
+            <select class="form-control" v-model="newPlayer.primaryDiscipline">
+              <option value="">주종목</option>
+              <option value="SGL">단식</option>
+              <option value="DBL">복식</option>
+              <option value="MXD">혼합복식</option>
+            </select>
           </div>
         </div>
       </div>
@@ -137,13 +183,20 @@ export default {
   data() {
     return {
       newPlayer: {
-        player_name: '',
-        gender: 'M'
+        first_name: '',
+        family_name: '',
+        nick_name: '',
+        nation_code: '',
+        gender: '',
+        hand: '',
+        primaryDiscipline: '',
       },
       teamName: '',
       nations: [],
       selectedCountry: '',
       players: [],
+      tourList: [],
+      selectedTour: "",
 
       // 모달 표시 여부
       showValidationModal: false,
@@ -158,22 +211,26 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await teamApi.getPlayerList(this.$route.params.team_code);
-        this.players = response.data;
-        this.teamName = this.players[0].team_name;
+        if ( this.$route.params.team_code ) {
+          const response = await teamApi.getPlayerList(this.$route.params.team_code);
+          this.players = response.data;
+          this.teamName = this.players[0].team_name;
+          this.selectedCountry = this.players[0].nation_code
+        }
 
         const response2 = await tourApi.getNationList();
         this.nations = response2.data;
 
-        this.selectedCountry = this.players[0].nation_code
+        const response3 = await tourApi.getTourList();
+        this.tourList = response3.data;
       } catch (error) {
         console.log(error);
       }
     },
     //유효성 검사 (필수 항목 체크)
     validateInput() {
-      // 팀 이름, 국가, players, etc. 검증
-      if (!this.teamName.trim() || !this.selectedCountry) {
+      // 대회선택 / 팀 이름
+      if (!this.selectedTour || !this.teamName.trim() ) {
         return false;
       }
       // 필요하다면 선수 목록 체크도 추가
@@ -182,7 +239,10 @@ export default {
     //등록 로직 모달
     openAddModal() {
       // (선택) newPlayer.player_name이 비었으면 모달로 알림
-      if (!this.newPlayer.player_name.trim()) {
+      if (!this.newPlayer.first_name.trim() || !this.newPlayer.family_name.trim()
+      || !this.newPlayer.nick_name.trim() || !this.newPlayer.nation_code.trim()
+      || !this.newPlayer.gender.trim() || !this.newPlayer.hand.trim()
+      || !this.newPlayer.primaryDiscipline.trim() ){
         this.showValidationModal = true;
       } else {
         this.showAddModal = true;
