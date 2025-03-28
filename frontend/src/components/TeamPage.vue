@@ -398,49 +398,43 @@ export default {
 </script>
 
 <style scoped>
-/* ------------------------------
-   전체 배경 및 레이아웃
------------------------------- */
 .game-info-page {
+  /*
+    1) 화면의 가운데 배치
+    2) 내용이 많으면 내부 스크롤
+  */
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 
-  /* 배경색, 크기, 기타 스타일 */
-  background-color: #4b7cb6;
-  width: 500px;
-  min-height: 400px;
-
-  /* 내부 요소 정렬 방식 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  /* 배경, 크기, 스크롤 설정 */
+  background-color: #4b7cb6;  /* 안쪽 박스는 흰색 바탕 */
+  width: 1024px;               /* 고정 폭 예시 */
+  max-width: 90%;            /* 화면이 좁아지면 90%까지만 줄어듦 */
+  max-height: 90vh;          /* 뷰포트 90% 높이로 제한 */
+  overflow-y: auto;          /* 세로 스크롤 */
 
   /* 내부 여백 */
   padding: 20px;
 }
 
+/* form-container: 기본 흐름 */
 .form-container {
-  position: sticky;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* ------------------------------
-   각 행(라벨+필드) 레이아웃
------------------------------- */
+/* 각 행(라벨+필드) 레이아웃 */
 .form-row {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
+  /* 가로로 배치, 필요 시 align-items로 높이 조정 가능 */
 }
 
 /* 왼쪽 라벨 영역 */
 .form-group.left {
-  /* 고정 높이 제거 (height: 70px; 불필요 시 삭제) */
   width: 100px;
   display: flex;
   align-items: center;
@@ -448,40 +442,34 @@ export default {
   flex-shrink: 0;
 }
 
-/* 선수 필드들을 가로로 쌓는 래퍼 */
+/* 선수 목록 래퍼 */
 .player-wrapper {
   display: flex;
-  flex-direction: row; /* 가로 나열 */
-  flex-wrap: wrap;     /* 줄바꿈 허용(공간 부족 시) */
+  flex-wrap: wrap;
   gap: 15px;
 }
 
-/* 개별 선수 한 칸(이름+성별) */
+/* 개별 선수 한 칸(2줄) */
 .player-row {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-bottom: 5px;
-  flex-direction: column; /* 2줄을 세로로 배치 */
-
 }
 
-/* player-row 아래 실제 한 줄 */
+/* player-row 내부 한 줄 */
 .player-row-line {
   display: flex;
-  flex-wrap: nowrap; /* 줄이 넘칠 경우 자동 줄바꿈 허용 */
+  flex-wrap: nowrap;
   gap: 10px;
 }
 
-
-/* ------------------------------
-   입력 요소에 대한 스타일
------------------------------- */
+/* 공통 입력 컨테이너 스타일 */
 .form-group {
-  /* 공통 박스 스타일 */
   display: flex;
   flex-direction: column;
-  background-color: white;
-  padding: 10px; /* padding을 조금 줄임 */
+  background-color: #fff;
+  padding: 10px;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -500,30 +488,17 @@ export default {
   font-size: 16px;
 }
 
-/* 셀렉트 기본 화살표 커스텀 */
+/* 셀렉트 화살표 커스텀 예시 */
 select.form-control {
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg...");
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 30px;
 }
 
-/* ------------------------------
-   가운데/오른쪽 .form-group
-   (필요 시 flex: 1; 제거 또는 조정)
------------------------------- */
-.form-group.middle,
-.form-group.right {
-  /* 확장 필요하면 유지, 불필요하면 주석 처리
-     flex: 1;
-  */
-}
-
-/* ------------------------------
-   버튼 영역
------------------------------- */
+/* 버튼 영역 */
 .button-container {
   display: flex;
   justify-content: flex-end;
@@ -544,33 +519,29 @@ select.form-control {
 }
 
 .btn-save {
-  /* 예시: 저장 버튼 색상 */
   background-color: #70c16b;
   color: #fff;
 }
 
 .btn-cancel {
-  /* 예시: 취소/종료 버튼 색상 */
   background-color: #f56b6b;
   color: #fff;
 }
 
-
-/* ------------------------------
-   반응형 처리
------------------------------- */
+/* 반응형 처리 */
 @media (max-width: 960px) {
   .form-row {
     flex-direction: column;
   }
-  .left {
+  .form-group.left {
     width: 100%;
     max-width: 100%;
     justify-content: flex-start;
   }
-  .middle,
-  .right {
+  .form-group.middle,
+  .form-group.right {
     max-width: 100%;
   }
 }
+
 </style>
