@@ -25,8 +25,8 @@ class Coder:
         try:
             base_sql = """
                 SELECT A.*
-                , B.team_name as team1_name, B.nation_code as team1_nation_code
-                , C.team_name as team2_name, C.nation_code as team2_nation_code
+                , B.team_name as team1_name
+                , C.team_name as team2_name
                 , DENSE_RANK() OVER (ORDER BY A.game_date) AS day_num
                 FROM ( 
                         SELECT tie_no, team1_code, team2_code, game_date
@@ -35,8 +35,8 @@ class Coder:
                         FROM bxl.game_info
                         {WHERE}
                         GROUP BY tie_no, team1_code, team2_code, game_date ) A
-                LEFT OUTER JOIN bxl.team_info B ON A.team1_code = B.team_code
-                LEFT OUTER JOIN bxl.team_info C ON A.team2_code = C.team_code
+                INNER JOIN bxl.team_info B ON A.team1_code = B.team_code
+                INNER JOIN bxl.team_info C ON A.team2_code = C.team_code
             """
 
             # 조건을 담을 리스트

@@ -41,78 +41,89 @@
         <!-- 오른쪽에 여러 선수 필드를 반복해서 넣기 위한 래퍼 -->
         <div class="player-wrapper">
           <!-- 여기서 반복 -->
-          <div
-            v-for="(player, index) in players"
-            :key="index"
-            class="player-row"
-          >
+          <div v-for="(player, index) in players" :key="index" class="player-row">
             <!-- 이름 입력 -->
-            <div class="form-group middle">
-              <input class="form-control" v-model="player.player_name" />
+            <div class="player-row-line">
+              <div class="form-group middle"><input class="form-control" v-model="player.first_name" placeholder="퍼스트 이름" /></div>
+              <div class="form-group middle"><input class="form-control" v-model="player.family_name" placeholder="패밀리 이름"/></div>
+              <div class="form-group middle"><input class="form-control" v-model="player.nick_name" placeholder="닉네임"/></div>
+              <button class="btn btn-cancel small" @click="openRemoveModal(index)">-</button>
             </div>
-            <!-- 성별 선택 -->
-            <div class="form-group right">
-              <select class="form-control" v-model="player.gender">
-                <option value="M">남</option>
-                <option value="W">여</option>
-              </select>
+            <div class="player-row-line">
+              <!-- 국가 -->
+              <div class="form-group middle">
+                <label>국가</label>
+                <select class="form-control" v-model="player.nation_code">
+                  <option v-for="nation in nations" :key="nation.code" :value="nation.code.trim()">{{ nation.code_desc }}</option>
+                </select>
+              </div>
+              <!-- 성별 -->
+              <div class="form-group right">
+                <label>성별</label>
+                <select class="form-control" v-model="player.gender">
+                  <option value="">성별</option>
+                  <option value="M">남</option>
+                  <option value="W">여</option>
+                </select>
+              </div>
+
+              <!-- 핸드 -->
+              <div class="form-group middle">
+                <label>핸드</label>
+                <select class="form-control" v-model="player.hand">
+                  <option value="">핸드</option>
+                  <option value="right">오른손</option>
+                  <option value="left">왼손</option>
+                </select>
+              </div>
+
+              <!-- 주종목 -->
+              <div class="form-group middle">
+                <label>주종목</label>
+                <select class="form-control" v-model="player.primary_discipline">
+                  <option value="">주종목</option>
+                  <option value="SGL">단식</option>
+                  <option value="DBL">복식</option>
+                  <option value="MXD">혼합복식</option>
+                </select>
+              </div>
             </div>
-            <button class="btn btn-cancel small" @click="removePlayer(index)">-</button>
           </div>
 
+          <!-- 추가되는 선수 정보 시작-->
           <div class="player-row">
-            <div class="form-group middle">
-              <input
-                class="form-control"
-                v-model="newPlayer.first_name"
-                placeholder="퍼스트 이름"
-              />
+            <div class="player-row-line">
+              <div class="form-group middle"><input class="form-control" v-model="newPlayer.first_name" placeholder="퍼스트 이름"/></div>
+              <div class="form-group middle"><input class="form-control" v-model="newPlayer.family_name" placeholder="패밀리 이름"/></div>
+              <div class="form-group middle"><input class="form-control" v-model="newPlayer.nick_name" placeholder="닉네임"/></div>
             </div>
-            <div class="form-group middle">
-              <input
-                class="form-control"
-                v-model="newPlayer.family_name"
-                placeholder="패밀리 이름"
-              />
+            <div class="player-row-line">
+              <div class="form-group middle">
+                <select class="form-control" v-model="newPlayer.nation_code">
+                  <option value="">국가선택</option>
+                  <option v-for="nation in nations" :key="nation.code" :value="nation.code.trim()">
+                    {{ nation.code_desc }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group right">
+                <select class="form-control" v-model="newPlayer.gender">
+                  <option value="">성별</option><option value="M">남</option><option value="W">여</option>
+                </select>
+              </div>
+              <div class="form-group middle">
+                <select class="form-control" v-model="newPlayer.hand">
+                  <option value="">핸드</option><option value="right">오른손</option><option value="left">왼손</option>
+                </select>
+              </div>
+              <div class="form-group middle">
+                <select class="form-control" v-model="newPlayer.primary_discipline">
+                  <option value="">주종목</option><option value="SGL">단식</option><option value="DBL">복식</option><option value="MXD">혼합복식</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group middle">
-              <input
-                class="form-control"
-                v-model="newPlayer.nick_name"
-                placeholder="닉네임"
-              />
-            </div>
           </div>
-          <div class="form-group middle">
-            <select class="form-control" v-model="newPlayer.nation_code">
-              <option value="">국가선택</option>
-              <option v-for="nation in nations" :key="nation.code" :value="nation.code.trim()">
-                {{ nation.code_desc }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group right">
-            <select class="form-control" v-model="newPlayer.gender">
-              <option value="">성별</option>
-              <option value="M">남</option>
-              <option value="W">여</option>
-            </select>
-          </div>
-          <div class="form-group middle">
-            <select class="form-control" v-model="newPlayer.hand">
-              <option value="">핸드</option>
-              <option value="right">오른손</option>
-              <option value="left">왼손</option>
-            </select>
-          </div>
-          <div class="form-group middle">
-            <select class="form-control" v-model="newPlayer.primaryDiscipline">
-              <option value="">주종목</option>
-              <option value="SGL">단식</option>
-              <option value="DBL">복식</option>
-              <option value="MXD">혼합복식</option>
-            </select>
-          </div>
+          <!-- 추가되는 선수 정보 종료-->
         </div>
       </div>
 
@@ -152,7 +163,7 @@
     <ConfirmationModal
       :visible="showSaveModal"
       title="저장 확인"
-      message="저장하시겠습니까?"
+      message="저장하시겠습니까? 등록 버튼을 눌라서 소속 선수 명단에 등록하지 않은 선수는 등록되지 않습니다. "
       confirmButtonLabel="확인"
       cancelButtonLabel="취소"
       @confirm="handleSaveConfirm"
@@ -163,11 +174,22 @@
     <ConfirmationModal
       :visible="showExitModal"
       title="종료 확인"
-      message="정말 종료하시겠습니까?"
+      message="메인 화면으로 이동하시겠습니까?"
       confirmButtonLabel="확인"
       cancelButtonLabel="취소"
       @confirm="handleExitConfirm"
       @cancel="handleExitCancel"
+    />
+
+    <!-- (5) 삭제 확인 모달 -->
+    <ConfirmationModal
+      :visible="showRemoveModal"
+      title="삭제 확인"
+      message="정말 이 선수를 삭제하시겠습니까?"
+      confirmButtonLabel="확인"
+      cancelButtonLabel="취소"
+      @confirm="handleRemoveConfirm"
+      @cancel="handleRemoveCancel"
     />
 </template>
 
@@ -189,11 +211,10 @@ export default {
         nation_code: '',
         gender: '',
         hand: '',
-        primaryDiscipline: '',
+        primary_discipline: '',
       },
       teamName: '',
       nations: [],
-      selectedCountry: '',
       players: [],
       tourList: [],
       selectedTour: "",
@@ -202,7 +223,9 @@ export default {
       showValidationModal: false,
       showAddModal: false,
       showSaveModal: false,
-      showExitModal: false
+      showExitModal: false,
+      showRemoveModal: false,
+      removeIndex: null,
     };
   },
   mounted() {
@@ -213,9 +236,12 @@ export default {
       try {
         if ( this.$route.params.team_code ) {
           const response = await teamApi.getPlayerList(this.$route.params.team_code);
-          this.players = response.data;
-          this.teamName = this.players[0].team_name;
-          this.selectedCountry = this.players[0].nation_code
+          this.players = response.data || [];
+
+          if (this.players.length > 0) {
+            this.teamName = this.players[0].team_name;
+            this.selectedTour = this.players[0].tournament_uuid;
+          }
         }
 
         const response2 = await tourApi.getNationList();
@@ -242,7 +268,7 @@ export default {
       if (!this.newPlayer.first_name.trim() || !this.newPlayer.family_name.trim()
       || !this.newPlayer.nick_name.trim() || !this.newPlayer.nation_code.trim()
       || !this.newPlayer.gender.trim() || !this.newPlayer.hand.trim()
-      || !this.newPlayer.primaryDiscipline.trim() ){
+      || !this.newPlayer.primary_discipline.trim() ){
         this.showValidationModal = true;
       } else {
         this.showAddModal = true;
@@ -258,14 +284,24 @@ export default {
       this.showAddModal = false;
     },
     addPlayer() {
-      if (this.newPlayer.player_name.trim() !== '') {
+      if (this.newPlayer.first_name.trim() !== ''  && this.newPlayer.family_name.trim() !== '' ) {
         this.players.push({
-          player_name: this.newPlayer.player_name,
-          gender: this.newPlayer.gender
+          first_name: this.newPlayer.first_name,
+          family_name: this.newPlayer.family_name,
+          nick_name: this.newPlayer.nick_name,
+          nation_code: this.newPlayer.nation_code,
+          gender: this.newPlayer.gender,
+          hand: this.newPlayer.hand,
+          primary_discipline: this.newPlayer.primary_discipline,
         });
         // 입력 필드 초기화
-        this.newPlayer.player_name = '';
-        this.newPlayer.gender = 'M';
+        this.newPlayer.first_name = '';
+        this.newPlayer.family_name = '';
+        this.newPlayer.nick_name = '';
+        this.newPlayer.nation_code = '';
+        this.newPlayer.gender = '';
+        this.newPlayer.hand = '';
+        this.newPlayer.primary_discipline = '';
       } else {
         alert('이름을 입력해주세요.');
       }
@@ -278,16 +314,20 @@ export default {
       // players_info: 서버 스펙에 맞게 가공
       const playersInfo = this.players.map((p) => ({
         player_uuid: p.player_uuid,      // 기존 uuid
-        player_name: p.player_name,
-        gender: p.gender
+        first_name: p.first_name,
+        family_name: p.family_name,
+        nick_name: p.nick_name,
+        nation_code: p.nation_code,
+        gender: p.gender,
+        hand: p.hand,
+        primary_discipline: p.primary_discipline,
       }));
 
       // 최종 전송할 데이터 구조
       const param = {
-        tournament_uuid: this.players[0].tournament_uuid,
+        tournament_uuid: this.selectedTour,
         team_name: this.teamName,
-        team_code: this.$route.params.team_code,
-        nation_code: this.selectedCountry,
+        team_code: this.$route.params.team_code || null,
         players_info: playersInfo
       };
 
@@ -331,7 +371,28 @@ export default {
     },
     closeValidationModal() {
       this.showValidationModal = false;
-    }
+    },
+    // 삭제 모달 열기
+    openRemoveModal(index) {
+      this.removeIndex = index;      // 어떤 선수를 지울지 인덱스 저장
+      this.showRemoveModal = true;   // 모달 표시
+    },
+    // 삭제 모달에서 '확인'을 눌렀을 때
+    handleRemoveConfirm() {
+      // 실제 선수 삭제
+      this.players.splice(this.removeIndex, 1);
+
+      // 모달 닫고 인덱스도 정리
+      this.showRemoveModal = false;
+      this.removeIndex = null;
+    },
+
+    // 삭제 모달에서 '취소'를 눌렀을 때
+    handleRemoveCancel() {
+      this.showRemoveModal = false;
+      this.removeIndex = null;
+    },
+
   }
 };
 </script>
@@ -359,10 +420,10 @@ export default {
 
   /* 내부 여백 */
   padding: 20px;
-
 }
 
 .form-container {
+  position: sticky;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -398,12 +459,19 @@ export default {
 /* 개별 선수 한 칸(이름+성별) */
 .player-row {
   display: flex;
-  align-items: center;
   gap: 10px;
-
-  /* 아래쪽 간격 주어, 행들이 붙지 않게 */
   margin-bottom: 5px;
+  flex-direction: column; /* 2줄을 세로로 배치 */
+
 }
+
+/* player-row 아래 실제 한 줄 */
+.player-row-line {
+  display: flex;
+  flex-wrap: nowrap; /* 줄이 넘칠 경우 자동 줄바꿈 허용 */
+  gap: 10px;
+}
+
 
 /* ------------------------------
    입력 요소에 대한 스타일
@@ -486,6 +554,7 @@ select.form-control {
   background-color: #f56b6b;
   color: #fff;
 }
+
 
 /* ------------------------------
    반응형 처리

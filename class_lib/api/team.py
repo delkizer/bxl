@@ -26,8 +26,10 @@ class Team:
         session = self.bxl_session_factory()
         try:
             query = text("""
-                SELECT A.team_code, A.team_name, A.nation_code, A.tournament_uuid
-                , B.player_uuid, B.player_name, trim(B.gender) as gender
+                SELECT A.team_code, A.team_name, A.tournament_uuid
+                , B.player_uuid
+                , B.first_name, B.family_name, B.nick_name, B.hand, B.primary_discipline
+                , trim(B.nation_code) as nation_code, trim(B.gender) as gender
                 FROM bxl.team_info A
                 LEFT OUTER JOIN bxl.player_info B ON A.team_code = B.team_code
                 WHERE A.team_code = :team_code
@@ -61,12 +63,11 @@ class Team:
             query = text("""
                 SELECT A.tournament_title, A.tournament_uuid
                 , A.city_name, A.start_date, A.end_date
-                , B.team_code, B.team_name, C.code_desc
+                , B.team_code, B.team_name
                 , ( SELECT count(*) FROM bxl.player_info pi WHERE pi.team_code = B.team_code) as player_cnt
                 FROM bxl.tournament_info A
                 INNER JOIN bxl.team_info B ON A.tournament_uuid = B.tournament_uuid
-                INNER JOIN bxl.code_info C ON B.nation_code = C.code
-                WHERE A.is_bxl = true            
+                WHERE A.is_bxl = true
             """)
             result = session.execute(query).mappings().all()
 
@@ -123,9 +124,15 @@ class Team:
                     # (3) 히스토리 테이블 기록 (DELETE)
                     deleted_player_info = PlayerInfo(
                         player_uuid=old_uuid,
-                        player_name=old_player_obj["player_name"],
-                        gender=old_player_obj["gender"]
+                        first_name=old_player_obj["first_name"],
+                        family_name=old_player_obj["family_name"],
+                        nick_name=old_player_obj["nick_name"],
+                        nation_code=old_player_obj["nation_code"],
+                        gender=old_player_obj["gender"],
+                        hand=old_player_obj["hand"],
+                        primary_discipline=old_player_obj["primary_discipline"]
                     )
+
                     self._insert_player_history(
                         session=session,
                         dml_type="DELETE",
@@ -213,7 +220,8 @@ class Team:
 
     def _team_player_list(self, session, team_code):
         query = text("""
-            SELECT player_uuid, tournament_uuid, player_name, gender
+            SELECT player_uuid, tournament_uuid, first_name, family_name, nick_name
+                 , nation_code, gender, hand, primary_discipline
             FROM bxl.player_info
             WHERE team_code = :team_code
          """)
@@ -222,13 +230,12 @@ class Team:
 
     def _insert_team(self, session, team_player_info: TeamAndPlayerInfo) -> int:
         insert_sql = text("""
-                          INSERT INTO bxl.team_info (tournament_uuid, team_name, nation_code)
-                          VALUES (:tournament_uuid, :team_name, :nation_code) RETURNING team_code
+                          INSERT INTO bxl.team_info (tournament_uuid, team_name)
+                          VALUES (:tournament_uuid, :team_name) RETURNING team_code
                           """)
         result = session.execute(insert_sql, {
             "tournament_uuid": str(team_player_info.tournament_uuid),
             "team_name": team_player_info.team_name,
-            "nation_code": team_player_info.nation_code
         })
         return result.scalar()  # 새로 생성된 PK
 
@@ -236,15 +243,13 @@ class Team:
         update_sql = text("""
                           UPDATE bxl.team_info
                           SET tournament_uuid = :tournament_uuid,
-                              team_name       = :team_name,
-                              nation_code     = :nation_code
+                              team_name       = :team_name
                           WHERE team_code = :team_code
                           """)
         session.execute(update_sql, {
             "team_code": team_player_info.team_code,
             "tournament_uuid": str(team_player_info.tournament_uuid),
             "team_name": team_player_info.team_name,
-            "nation_code": team_player_info.nation_code
         })
         return team_player_info.team_code
 
@@ -253,47 +258,61 @@ class Team:
         새 플레이어를 INSERT하고, 생성된 UUID를 반환.
         player_uuid가 None이면 여기서 새로 생성해서 INSERT.
         """
-        # 1) player_uuid가 없으면 새로 생성
-        new_uuid = uuid.uuid4()
+        # 1) player_uuid가 None이면 새로 생성
+        new_uuid = player.player_uuid or uuid.uuid4()
 
         insert_sql = text("""
-                          INSERT INTO bxl.player_info
-                              (player_uuid, team_code, tournament_uuid, player_name, gender)
-                          VALUES (:player_uuid, :team_code, :tournament_uuid, :player_name,
-                                  :gender) RETURNING player_uuid
+                          INSERT INTO bxl.player_info (player_uuid, team_code, tournament_uuid, first_name, family_name
+                              , nick_name, nation_code, gender, hand, primary_discipline)
+                          VALUES (:player_uuid, :team_code, :tournament_uuid, :first_name, :family_name
+                                , :nick_name, :nation_code, :gender, :hand, :primary_discipline) RETURNING player_uuid
                           """)
 
         result = session.execute(insert_sql, {
             "player_uuid": str(new_uuid),
             "team_code": team_code,
             "tournament_uuid": str(tournament_uuid),
-            "player_name": player.player_name,
-            "gender": player.gender
+            "first_name": player.first_name,
+            "family_name": player.family_name,
+            "nick_name": player.nick_name,
+            "nation_code": player.nation_code,
+            "gender": player.gender,
+            "hand": player.hand,
+            "primary_discipline": player.primary_discipline,
         })
-        return result.scalar()  # 새로 삽입된 UUID
+        return result.scalar()
 
     def _update_player(self, session, team_code: int, tournament_uuid: uuid.UUID, player: PlayerInfo) -> int:
         """
-        기존 플레이어를 UPDATE.
+        기존 플레이어를 UPDATE한다.
         리턴값: 업데이트된 행 수(rowcount)
-
-        - 존재하지 않는 player_uuid에 대해 UPDATE를 시도하면 rowcount=0
-        - 여기서 처리할지, 상위에서 처리할지 결정 가능
         """
         update_sql = text("""
                           UPDATE bxl.player_info
-                          SET team_code       = :team_code,
-                              tournament_uuid = :tournament_uuid,
-                              player_name     = :player_name,
-                              gender          = :gender
+                          SET team_code          = :team_code,
+                              tournament_uuid    = :tournament_uuid,
+                              first_name         = :first_name,
+                              family_name        = :family_name,
+                              nick_name          = :nick_name,
+                              nation_code        = :nation_code,
+                              gender             = :gender,
+                              hand               = :hand,
+                              primary_discipline = :primary_discipline
                           WHERE player_uuid = :player_uuid
                           """)
+
         result = session.execute(update_sql, {
             "player_uuid": str(player.player_uuid),
             "team_code": team_code,
             "tournament_uuid": str(tournament_uuid),
-            "player_name": player.player_name,
-            "gender": player.gender
+
+            "first_name": player.first_name,
+            "family_name": player.family_name,
+            "nick_name": player.nick_name,
+            "nation_code": player.nation_code,
+            "gender": player.gender,
+            "hand": player.hand,
+            "primary_discipline": player.primary_discipline
         })
         return result.rowcount
 
@@ -311,14 +330,15 @@ class Team:
         result = session.execute(delete_sql, {"team_code": team_code, "player_uuid": player_uuid})
         return result
 
-
-    def _insert_player_history(self, session
-                               ,dml_type, team_code: int, tournament_uuid: uuid.UUID, player: PlayerInfo ):
+    def _insert_player_history( self, session, dml_type: str, team_code: int
+                                , tournament_uuid: uuid.UUID, player: PlayerInfo ):
         insert_sql = text("""
                           INSERT INTO bxl.player_history
-                              (dml_type, player_uuid, team_code, tournament_uuid, player_name, gender)
-                          VALUES (:dml_type, :player_uuid, :team_code, :tournament_uuid, :player_name,
-                                  :gender) 
+                            (dml_type, player_uuid, team_code, tournament_uuid, first_name, family_name
+                            , nick_name, nation_code, gender, hand, primary_discipline, create_time)
+                          VALUES 
+                            (:dml_type, :player_uuid, :team_code, :tournament_uuid, :first_name, :family_name
+                            , :nick_name, :nation_code, :gender, :hand, :primary_discipline, now())
                           """)
 
         result = session.execute(insert_sql, {
@@ -326,7 +346,12 @@ class Team:
             "player_uuid": player.player_uuid,
             "team_code": team_code,
             "tournament_uuid": tournament_uuid,
-            "player_name": player.player_name,
-            "gender": player.gender
+            "first_name": player.first_name,
+            "family_name": player.family_name,
+            "nick_name": player.nick_name,
+            "nation_code": player.nation_code,
+            "gender": player.gender,
+            "hand": player.hand,
+            "primary_discipline": player.primary_discipline,
         })
         return result

@@ -62,6 +62,16 @@ export default {
       this.tourList = response2.data
 
     } catch ( error ) {
+      // 에러 응답 정보가 있는지, 그리고 상태 코드와 detail이 원하는 조건과 일치하는지 확인
+      if (
+        error.response &&
+        error.response.status === 404 &&
+        error.response.data.detail === "User not found"
+      ) {
+        // 404 + "User not found" 시에는 별도의 에러 처리를 하지 않음
+        return;
+      }
+
       console.error(error);
     }
   },

@@ -74,16 +74,44 @@ class PlayerInfo(BaseModel):
     """
     개별 플레이어 정보를 나타내는 모델
     """
-    player_uuid: Optional[uuid.UUID] = None
-    player_name: str = Field(
+    player_uuid: Optional[uuid.UUID] = Field(
+        default=None,
+        description="플레이어 UUID. 기존 플레이어가 아닌 경우 None."
+    )
+    first_name: str = Field(
         ...,
-        description="플레이어 이름",
-        example="Eko Yuli"
+        description="플레이어의 퍼스트(이름) 부분",
+        example="Eko"
+    )
+    family_name: str = Field(
+        ...,
+        description="플레이어의 패밀리(성) 부분",
+        example="Yuli"
+    )
+    nick_name: str = Field(
+        ...,
+        description="플레이어의 별칭(닉네임)",
+        example="Eko Y."
+    )
+    nation_code: str = Field(
+        ...,
+        description="플레이어 국적(2~4 글자 코드, 예: KOR, USA, etc.)",
+        example="KOR"
     )
     gender: str = Field(
         ...,
-        description="플레이어 성별(예: 'M', 'F')",
+        description="플레이어 성별(M=남, W=여 등)",
         example="M"
+    )
+    hand: str = Field(
+        ...,
+        description="플레이어가 주로 사용하는 손('right' 또는 'left')",
+        example="right"
+    )
+    primary_discipline: str = Field(
+        ...,
+        description="플레이어의 주종목(SGL=단식, DBL=복식, MXD=혼합복식)",
+        example="SGL"
     )
 
 class TeamAndPlayerInfo(BaseModel):
@@ -101,11 +129,6 @@ class TeamAndPlayerInfo(BaseModel):
         ...,
         description="팀 이름. 동일한 국적(nation_code) 내에서는 중복될 수 없습니다.",
         example="Warriors"
-    )
-    nation_code: str = Field(
-        ...,
-        description="팀의 국적을 나타내는 2~4글자 코드(예: 'KOR', 'USA', etc.).",
-        example="KOR"
     )
     team_code: Optional[int] = Field(
         None,
