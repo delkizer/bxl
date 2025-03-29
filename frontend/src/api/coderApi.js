@@ -5,5 +5,8 @@ export default {
   getGameList(params = {}) {
     return apiClient.get('/api/gamelist', { params })
   },
+  getMatchTypeList(params = {}) {
+    return apiClient.get('/api/matchtype/list', { params })
+  }
 
 }

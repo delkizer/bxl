@@ -5,6 +5,7 @@
       <h2>TIE 선택</h2>
       <!-- dayList 배열을 순회해 옵션 생성 -->
       <select v-model="selectedDay" @change="filterTies">
+        <option value=""></option>
         <option
           v-for="(day, index) in dayList"
           :key="index"
@@ -28,7 +29,7 @@
 
         <!-- 팀명, 국가코드, 점수를 원하는 형태로 구성 -->
         <p>
-          {{ tie.team1_name }}({{ tie.team1_nation_code }})
+          {{ tie.team1_name }}
           {{ tie.team1_point_sum }} : {{ tie.team2_point_sum }}
           {{ tie.team2_name }}({{ tie.team2_nation_code }})
         </p>

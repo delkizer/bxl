@@ -1,154 +1,378 @@
 <template>
   <div class="game-info-page">
     <div class="form-container">
-      <!-- 대회정보 -->
+
+      <!-- 대회, 날짜, tie_no, 팀1, 팀2 선택 등 상단 UI는 그대로 유지 -->
       <div class="form-row">
         <div class="form-group left">
           <label>대회정보</label>
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="selectedTournament">
-            <option v-for="tour in tournamentList" :key="tour" :value="tour">
-              {{ tour }}
+          <select class="form-control" v-model="gameData.tournament_uuid" @change="onTournamentChange">
+            <option value="">-- 대회 선택 --</option>
+            <option
+              v-for="tour in tourList"
+              :key="tour.tournament_uuid"
+              :value="tour.tournament_uuid"
+            >
+              {{ tour.tournament_title }}
             </option>
           </select>
         </div>
         <div class="form-group middle">
-          <input type="date" class="form-control" v-model="matchDate" />
+          <input type="date" class="form-control" v-model="gameData.game_date" />
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="selectedTEI">
-            <option v-for="tei in teiList" :key="tei" :value="tei">
-              {{ tei }}
+          <select class="form-control" v-model="gameData.tie_no">
+            <option v-for="n in 9" :key="n" :value="n">
+              {{ n }} Tie
             </option>
           </select>
         </div>
       </div>
-      <!-- MATCH 선택 (25개 Select) -->
+
+      <!-- 팀1, 팀2 선택 (두 팀만) -->
       <div class="form-row">
         <div class="form-group left">
-          <select class="form-control" v-model="selectedTeam1">
-            <option v-for="team in teamList" :key="team" :value="team">
-              {{ team }}
+          <label>Team1</label>
+        </div>
+        <div class="form-group middle">
+          <select class="form-control" v-model="gameData.team1_code" @change="onTeam1Change">
+            <option value="">-- 팀 선택 --</option>
+            <option v-for="team in teamList" :key="team.team_code" :value="team.team_code" :disabled="team.team_code === gameData.team2_code" >
+              {{ team.team_name }}
             </option>
           </select>
         </div>
-        <div class="form-group middle match-wrapper">
-          <!-- 5행 × 5열 구조 -->
-          <div
-            v-for="(row, rowIndex) in matchRows"
-            :key="rowIndex"
-            class="match-row"
-          >
-            <!-- 각 행에 5개의 Select -->
-            <select
-              class="form-control"
-              v-for="(val, colIndex) in row"
-              :key="colIndex"
-              v-model="selectedMatchValues[rowIndex][colIndex]"
-            >
-              <!-- 일단 예시로 playerList 재활용 -->
-              <option v-for="player in playerList" :key="player" :value="player">
-                {{ player }}
-              </option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <!-- MATCH 선택 (25개 Select) -->
-      <div class="form-row">
+
         <div class="form-group left">
-          <select class="form-control" v-model="selectedTeam1">
-            <option v-for="team in teamList" :key="team" :value="team">
-              {{ team }}
+          <label>Team2</label>
+        </div>
+        <div class="form-group middle">
+          <select class="form-control" v-model="gameData.team2_code" @change="onTeam2Change">
+            <option value="">-- 팀 선택 --</option>
+            <option v-for="team in teamList" :key="team.team_code" :value="team.team_code" :disabled="team.team_code === gameData.team1_code" >
+              {{ team.team_name }}
             </option>
           </select>
         </div>
-        <div class="form-group middle match-wrapper">
-          <!-- 5행 × 5열 구조 -->
-          <div
-            v-for="(row, rowIndex) in matchRows"
-            :key="rowIndex"
-            class="match-row"
-          >
-            <!-- 각 행에 5개의 Select -->
+      </div>
+
+      <!-- 매치 정보 (5경기) -->
+      <div class="matches-container">
+
+        <!-- match_info를 반복 렌더링 -->
+        <div
+          v-for="(matchItem, idx) in gameData.match_info"
+          :key="matchItem.match_no"
+          class="match-row"
+        >
+          <!-- 상단 영역: Match No, 매치타입, 점수 -->
+          <div class="match-header">
+            <p class="match-title">Match No: {{ matchItem.match_no }}</p>
+
+            <!-- 매치 타입 선택 -->
             <select
-              class="form-control"
-              v-for="(val, colIndex) in row"
-              :key="colIndex"
-              v-model="selectedMatchValues[rowIndex][colIndex]"
+              class="form-control type-select"
+              v-model="matchItem.match_type"
+              @change="onMatchTypeChange(idx)"
             >
-              <!-- 일단 예시로 playerList 재활용 -->
-              <option v-for="player in playerList" :key="player" :value="player">
-                {{ player }}
+              <option value="">-- 매치타입 --</option>
+              <option
+                v-for="mtype in matchTypeList"
+                :key="mtype.code"
+                :value="mtype.code"
+                :disabled="isUsedElsewhere(mtype.code, idx)"
+              >
+                {{ mtype.match_type }}
               </option>
             </select>
+
+            <!-- 점수 (자동 연동) -->
+            <select class="form-control point-select" v-model="matchItem.match_point">
+              <option value="1">1점</option>
+              <option value="2">2점</option>
+              <option value="3">3점</option>
+            </select>
           </div>
-        </div>
-      </div>
+
+          <!-- TEAM1 선수 영역 -->
+          <div class="team-block">
+            <p class="team-label">Team1 Players</p>
+            <!-- matchItem.team1_player.player_info -->
+            <div class="player-row-line">
+              <div
+                v-for="(pId, pIndex) in matchItem.team1_player.player_info"
+                :key="pIndex"
+                class="player-select-wrap"
+              >
+                <select
+                  class="form-control player-select"
+                  v-model="matchItem.team1_player.player_info[pIndex]"
+                >
+                  <option value="">-- 선수 --</option>
+                  <option
+                    v-for="p in playerListTeam1"
+                    :key="p.player_uuid"
+                    :value="p.player_uuid"
+                  >
+                    {{ p.nick_name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- TEAM2 선수 영역 -->
+          <div class="team-block">
+            <p class="team-label">Team2 Players</p>
+            <!-- matchItem.team2_player.player_info -->
+            <div class="player-row-line">
+              <div
+                v-for="(pId, pIndex) in matchItem.team2_player.player_info"
+                :key="pIndex"
+                class="player-select-wrap"
+              >
+                <select
+                  class="form-control player-select"
+                  v-model="matchItem.team2_player.player_info[pIndex]"
+                >
+                  <option value="">-- 선수 --</option>
+                  <option
+                    v-for="p in playerListTeam2"
+                    :key="p.player_uuid"
+                    :value="p.player_uuid"
+                  >
+                    {{ p.nick_name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div><!-- /match-row -->
+      </div><!-- /matches-container -->
 
       <!-- 버튼 -->
       <div class="button-container">
         <button class="btn btn-save" @click="handleSave">저장</button>
         <button class="btn btn-cancel" @click="handleCancel">종료</button>
       </div>
-
-    </div>
-  </div>
+    </div><!-- /form-container -->
+  </div><!-- /game-info-page -->
 </template>
 
+
 <script>
+import tourApi from "@/api/tourApi.js";
+import teamApi from "@/api/teamApi.js";
+import coderApi from "@/api/coderApi.js";
+
 export default {
   name: "GameInfoPage",
   data() {
     return {
-      // 예시: 대회목록, TEI목록, 팀목록
-      tournamentList: ["25 BXL 배드민턴 대회", "다른 대회명", "또 다른 대회명"],
-      selectedTournament: "25 BXL 배드민턴 대회",
+      gameData: {
+        tournament_uuid: "",
+        tie_no: 1,
+        game_date: "",
+        team1_code: null,
+        team2_code: null,
+        match_info: [
+          {
+            match_no: 1,
+            match_type: "",
+            match_point: 1,
+            team1_player: { player_info: [] },
+            team2_player: { player_info: [] }
+          },
+          {
+            match_no: 2,
+            match_type: "",
+            match_point: 1,
+            team1_player: { player_info: [] },
+            team2_player: { player_info: [] }
+          },
+          {
+            match_no: 3,
+            match_type: "",
+            match_point: 1,
+            team1_player: { player_info: [] },
+            team2_player: { player_info: [] }
+          },
+          {
+            match_no: 4,
+            match_type: "",
+            match_point: 1,
+            team1_player: { player_info: [] },
+            team2_player: { player_info: [] }
+          },
+          {
+            match_no: 5,
+            match_type: "",
+            match_point: 1,
+            team1_player: { player_info: [] },
+            team2_player: { player_info: [] }
+          }
+        ]
+      },
+      tourList: [],       // 대회 목록
+      teamList: [],       // 팀 목록
+      matchTypeList: [],  // 매치타입 목록
 
-      matchDate: "",
-      teiList: ["TEI 1", "TEI 2", "TEI 3", "TEI 4", "TEI 5"
-        , "TEI 6", "TEI 7", "TEI 8", "TEI 9"],
-      selectedTEI: "TEI 1",
+      playerListTeam1: [], // 팀1 선수 목록
+      playerListTeam2: [],  // 팀2 선수 목록
 
-      teamList: ["TEAM1 선택", "TEAM2 선택", "Rockets", "Tigers", "Lions"],
-      selectedTeam1: "TEAM1 선택",
-
-      // 매치 25개 셀렉트에 들어갈 옵션(예시로 선수 목록)
-      playerList: ["이용석", "김예지", "신수인", "이사야", "선수선택", "남자단식", "여자단식", "여자복식", "MATCH4", "3X3", "1", "2", "3", "승점"],
-
-      // 화면에 보이는 5×5 셀렉트의 초기값 구조
-      matchRows: [
-        // row 1 (남자단식, 이용석, 선수선택, 선수선택, 1)
-        ["남자단식", "이용석", "선수선택", "선수선택", "1"],
-        // row 2 (여자단식, 김예지, 선수선택, 선수선택, 2)
-        ["여자단식", "김예지", "선수선택", "선수선택", "2"],
-        // row 3 (여자복식, 신수인, 이사야, 선수선택, 승점)
-        ["여자복식", "신수인", "이사야", "선수선택", "승점"],
-        // row 4 (MATCH4, 선수선택, 선수선택, 선수선택, 승점)
-        ["MATCH4", "선수선택", "선수선택", "선수선택", "승점"],
-        // row 5 (3X3, 선수선택, 선수선택, 선수선택, 3)
-        ["3X3", "선수선택", "선수선택", "선수선택", "3"]
-      ],
-
-      // v-model로 제어할 5×5 매치 선택값
-      // (초기에는 matchRows와 동일하게 세팅)
-      selectedMatchValues: [
-        ["남자단식", "이용석", "선수선택", "선수선택", "1"],
-        ["여자단식", "김예지", "선수선택", "선수선택", "2"],
-        ["여자복식", "신수인", "이사야", "선수선택", "승점"],
-        ["MATCH4", "선수선택", "선수선택", "선수선택", "승점"],
-        ["3X3", "선수선택", "선수선택", "선수선택", "3"]
+      match_info: [
+        { match_no: 1, match_type: "" },
+        { match_no: 2, match_type: "" },
+        { match_no: 3, match_type: "" },
+        { match_no: 4, match_type: "" },
+        { match_no: 5, match_type: "" }
       ]
     };
   },
+  mounted() {
+    this.fetchInitialData();
+  },
   methods: {
+    // 대회 목록, 매치타입 목록 등 초기 데이터 가져오기
+    async fetchInitialData() {
+      try {
+        // 1) 대회 목록
+        const tourRes = await tourApi.getTourList();
+        this.tourList = tourRes.data;
+
+        // 2) 매치타입 목록
+        const matchRes = await coderApi.getMatchTypeList();
+        this.matchTypeList = matchRes.data;
+        // [ {code: "MSIG", match_type:"남자 단식"}, ... ]
+
+        // 3) 팀 목록 (선택된 대회가 있다면 그에 맞춰 가져오도록 할 수도 있음)
+        //    or, 대회 선택 시점에 가져올 수도 있음.
+        //    여기서는 단순히 전체 팀 목록이라 가정
+        const teamRes = await teamApi.getTeamList(/* params if needed */);
+        this.teamList = teamRes.data;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    // 대회 선택 시점에, 대회별 팀 목록만 가져오고 싶다면 이런 식:
+    onTournamentChange() {
+      if (!this.gameData.tournament_uuid) {
+        this.teamList = [];
+        return;
+      }
+      teamApi.getTeamList({ tournament_uuid: this.gameData.tournament_uuid })
+        .then(res => {
+          this.teamList = res.data;
+        })
+        .catch(err => console.error(err));
+    },
+
+    // 팀1 선택 시 -> team1_code에 맞는 선수 목록 호출
+    onTeam1Change() {
+      const tCode = this.gameData.team1_code;
+      if (!tCode) {
+        this.playerListTeam1 = [];
+        return;
+      }
+      teamApi.getPlayerList(tCode)
+        .then(res => {
+          this.playerListTeam1 = res.data;
+          console.log("Team1 Players:", this.playerListTeam1);
+        })
+        .catch(err => console.error(err));
+    },
+
+    // 팀2 선택 시 -> team2_code에 맞는 선수 목록 호출
+    onTeam2Change() {
+      const tCode = this.gameData.team2_code;
+      if (!tCode) {
+        this.playerListTeam2 = [];
+        return;
+      }
+      teamApi.getPlayerList(tCode)
+        .then(res => {
+          this.playerListTeam2 = res.data;
+          console.log("Team2 Players:", this.playerListTeam2);
+        })
+        .catch(err => console.error(err));
+    },
+
+    // 매치타입 바뀔 때 -> 점수, 그리고 player_info 배열 길이 조절
+    onMatchTypeChange(idx) {
+      const matchItem = this.gameData.match_info[idx];
+      const currentType = matchItem.match_type;
+
+      // 필요 슬롯 개수 결정 (단식1, 복식2, 3대3=3 등)
+      let neededPlayers = 1;
+      if (currentType === "MSIG" || currentType === "WSIG") {
+        neededPlayers = 1;
+      } else if (currentType === "MDBL" || currentType === "WDBL") {
+        neededPlayers = 2;
+      } else if (currentType === "03X3") {
+        neededPlayers = 3;
+      }
+
+      // match_point에 반영 (원하시면 필요Players랑 동일하게 하거나, 별도 로직)
+      matchItem.match_point = neededPlayers;
+
+      // 기존 선수 배열
+      let oldT1 = matchItem.team1_player.player_info; // ex) ["선수A", "", ...]
+      let oldT2 = matchItem.team2_player.player_info;
+
+      // (A) team1 길이 조절
+      if (oldT1.length < neededPlayers) {
+        // ex) 1명 -> 2명으로 늘리는 경우
+        // 남은 칸만큼 "" 추가
+        const extra = neededPlayers - oldT1.length;
+        oldT1 = [...oldT1, ...Array(extra).fill("")];
+      } else if (oldT1.length > neededPlayers) {
+        // ex) 3명 -> 2명으로 줄이는 경우
+        // 앞부분 neededPlayers개만 살림
+        oldT1 = oldT1.slice(0, neededPlayers);
+      }
+
+      // (B) team2 길이 조절
+      if (oldT2.length < neededPlayers) {
+        const extra = neededPlayers - oldT2.length;
+        oldT2 = [...oldT2, ...Array(extra).fill("")];
+      } else if (oldT2.length > neededPlayers) {
+        oldT2 = oldT2.slice(0, neededPlayers);
+      }
+
+      // 수정된 배열을 다시 대입
+      matchItem.team1_player.player_info = oldT1;
+      matchItem.team2_player.player_info = oldT2;
+
+      // 디버깅용
+      console.log(`[onMatchTypeChange] idx=${idx}, neededPlayers=${neededPlayers}`);
+      console.log("Team1 old -> new:", oldT1);
+      console.log("Team2 old -> new:", oldT2);
+    },
+    isUsedElsewhere(matchCode, currentIndex) {
+        // 만약 아직 아무것도 선택 안했다면 or matchCode가 빈문자열이면 불필요
+        if (!matchCode) return false;
+
+        // match_info 배열을 순회,
+        // currentIndex 제외한 나머지 행에 match_type === matchCode가 있으면 true
+        return this.gameData.match_info.some((item, idx) => {
+          // 자기 자신은 제외
+          if (idx === currentIndex) return false;
+          // 타입이 동일하면 다른 매치에서 이미 사용 중
+          return item.match_type === matchCode;
+        });
+    },
     handleSave() {
-      // 나중에 실제 저장 로직 추가
-      alert("저장 버튼 클릭\n\n" + JSON.stringify(this.selectedMatchValues, null, 2));
+      // 최종 전송 데이터: this.gameData
+      console.log(">>> 최종 데이터:", this.gameData);
+      alert("저장 버튼 클릭\n\n" + JSON.stringify(this.gameData, null, 2));
+
+      // 여기서 실제 API POST 요청:
+      // axios.post("/api/game-save", this.gameData).then( ... )
     },
     handleCancel() {
-      // 나중에 실제 종료/취소 로직 추가
       alert("종료 버튼 클릭");
     }
   }
@@ -160,25 +384,20 @@ export default {
    전체 배경 및 레이아웃
 ------------------------------ */
 .game-info-page {
-  width: 800px;
-  margin: 0 auto; /* 가로 중앙정렬 */
-  background-color: #4b7cb6;
-  padding: 20px;
-  min-height: 100vh;
-  box-sizing: border-box;
-
-  /* 자식 배치용 flex (필요하다면) */
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* 이건 내부 콘텐츠를 가운데로 모으는 옵션 */
-  justify-content: start; /* start로 해서 세로 상단부터 배치 */
-
   position: absolute;
   top: 50%;
   left: 50%;
-
-  /* 자기 자신의 너비·높이의 절반만큼 좌상단으로 이동하여 정중앙 배치 */
   transform: translate(-50%, -50%);
+
+  background-color: #4b7cb6;
+  width: 1024px;         /* 고정 폭 예시 */
+  max-width: 95%;        /* 화면이 좁으면 95%까지만 줄임 */
+  max-height: 90vh;      /* 화면 높이의 90%로 제한 */
+  overflow-y: auto;      /* 세로 스크롤 표시 */
+
+  /* 내부 여백 */
+  padding: 20px;
+  box-sizing: border-box;
 
 }
 
@@ -254,6 +473,53 @@ select.form-control {
 /* 각 행 안에 있는 5개 셀렉트들 */
 .match-row {
   display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  gap: 10px; /* 내부 요소 간격 */
+}
+
+.match-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+
+.match-title {
+  font-weight: bold;
+  margin: 0;
+  min-width: 120px;
+  /* 필요에 따라 스타일링 */
+}
+
+.team-block {
+  display: flex;
+  flex-direction: column; /* 위->아래로 쌓이게 */
+  gap: 10px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fafafa; /* 살짝 배경색 */
+}
+
+.team-label {
+  font-weight: bold;
+  margin: 0 0 5px 0;
+}
+
+.player-row-line {
+  display: flex;            /* 가로 배치 */
+  flex-direction: row;
+  flex-wrap: nowrap;        /* 한 줄로 강제 배치 (넘치면 스크롤) */
+  gap: 10px;                /* Select들 사이의 간격 */
+}
+
+/* 플레이어 select 래퍼 (한 줄) */
+.player-select-wrap {
+  display: flex;
   flex-direction: row;
   gap: 10px;
 }
@@ -288,6 +554,17 @@ select.form-control {
 .btn-cancel {
   background-color: #f56b6b;
   color: #fff;
+}
+
+.player-select {
+  width: 100px;        /* 원하는 픽셀 값(ex.120px) */
+  flex-shrink: 0;      /* flex 환경에서 줄어들지 않도록 */
+}
+
+.matches-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* ------------------------------

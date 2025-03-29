@@ -1,6 +1,5 @@
 import uuid
 
-from pyexpat.errors import messages
 from typing import Optional
 
 from fastapi import FastAPI, Path, HTTPException, status, Depends, Request, Query
@@ -12,7 +11,7 @@ from class_config.class_log import ConfigLogger
 from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 
-from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo, TeamAndPlayerInfo
+from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo, TeamAndPlayerInfo, TieInfo
 from class_lib.api.auth import Auth
 from class_lib.api.coder import Coder
 from class_lib.api.team import Team
@@ -27,18 +26,9 @@ define = Define()
 define_code = DefineCode()
 db_config = ConfigDB()
 auth = Auth( logger )
-
-config_logger_coder = ConfigLogger('http_coder_log', 365)
-coder_logger = config_logger_coder.get_logger('coder')
-coder = Coder( coder_logger )
-
-config_logger_tour = ConfigLogger('http_tour_log', 365)
-tour_logger = config_logger_coder.get_logger('tour')
-tour = Tour( tour_logger )
-
-config_logger_team = ConfigLogger('http_team_log', 365)
-team_logger = config_logger_team.get_logger('team')
-team = Team( team_logger )
+coder = Coder( logger )
+tour = Tour( logger )
+team = Team( logger )
 
 
 # title, description 등 OpenAPI 문서용 설정을 줄 수 있음
@@ -285,3 +275,27 @@ async def get_playerlist(
     result = team.get_player_list(team_code)
     return result
 
+@app.get("/api/tielist", tags=["Coder"])
+async def get_tielist(
+        request: Request,
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+        tie_no: Optional[int] = Query(None, description="토너먼트에 해당하는 tie no"),
+):
+    """
+    :param request:
+    :return: tai에 해당하는 팀과 정보 리스트 전체 전달
+    """
+    result = None
+    return result
+
+@app.post("/api/tiepage", tags=["Coder"])
+async def get_tiepage(
+        request: Request,
+        tie_info: TieInfo,
+):
+    """
+    :param request: 
+    :return: 
+    """
+    result = coder.create_tie(tie_info)
+    return result

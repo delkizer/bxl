@@ -120,23 +120,25 @@ class TeamAndPlayerInfo(BaseModel):
     - 'team_code'가 없으면 새 팀을 생성할 수도 있고,
     - 이미 존재하는 'team_code'가 있다면 해당 팀에 플레이어를 등록 또는 업데이트
     """
-    tournament_uuid: uuid.UUID = Field(
-        ...,
-        description="해당 팀과 플레이어가 속한 대회(Tournament)의 고유 식별자(UUID).",
-        example="d290f1ee-6c54-4b01-90e6-d701748f0851"
-    )
-    team_name: str = Field(
-        ...,
-        description="팀 이름. 동일한 국적(nation_code) 내에서는 중복될 수 없습니다.",
-        example="Warriors"
-    )
-    team_code: Optional[int] = Field(
-        None,
-        description="team_info 테이블의 PK(고유번호). 값을 주지 않으면 새로 팀이 생성될 수 있습니다.",
-        example=1
-    )
-    players_info: List[PlayerInfo] = Field(
-        ...,
-        description="하나의 플레이어 정보를 나타내는 중첩 객체"
-    )
+    tournament_uuid: uuid.UUID = Field(...,description="해당 팀과 플레이어가 속한 대회(Tournament)의 고유 식별자(UUID).",
+                                       example="d290f1ee-6c54-4b01-90e6-d701748f0851")
+    team_name: str = Field(...,description="팀 이름. 동일한 국적(nation_code) 내에서는 중복될 수 없습니다.",example="Warriors")
+    team_code: Optional[int] = Field(None, description="team_info 테이블의 PK(고유번호). 값을 주지 않으면 새로 팀이 생성될 수 있습니다.", example=1)
+    players_info: List[PlayerInfo] = Field( ...,description="하나의 플레이어 정보를 나타내는 중첩 객체" )
 
+class MatchInfo(BaseModel):
+    """각 매치 정보"""
+    match_no: int = Field(..., description="매치 번호 (1~5)")
+    match_type: str = Field(..., description="매치 유형 (예: MSIG, WSIG, MDBL, WDBL, 03X3)")
+    match_point: int = Field(..., description="매치 포인트(단식=1, 복식=2, 3대3=3)")
+    team1_player: List[uuid.UUID] = Field(...,description="TEAM1 선수 UUID 배열")
+    team2_player: List[uuid.UUID] = Field(...,description="TEAM2 선수 UUID 배열")
+
+class TieInfo(BaseModel):
+    """전체 전달받는 경기 정보 구조"""
+    tournament_uuid: uuid.UUID = Field(...,description="토너먼트(대회) UUID (예: '96189024-2c80-4937-92e9-c80936a7baf9')")
+    tie_no: int = Field(...,description="Tie 번호 (예: 1)")
+    game_date: str = Field(...,description="경기 일자 (YYYY-MM-DD 형식)")
+    team1_code: int = Field(...,description="팀1 코드 (예: 1)")
+    team2_code: int = Field(...,description="팀2 코드 (예: 2)")
+    match_info: List[MatchInfo] = Field(...,description="매치 정보 리스트 (최대 5경기)")
