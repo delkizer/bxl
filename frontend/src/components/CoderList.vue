@@ -42,19 +42,37 @@
       <button @click="goHome">메인가기</button>
     </footer>
   </div>
+  <CoderModal
+  :visible="showModal"
+  title="TIE 상세정보 확인"
+  :message="modalMessage"
+  confirmButtonLabel="CODER"
+  updateButtonLabel="MODIFY"
+  cancelButtonLabel="CANCEL"
+  @confirm="onConfirmSelectTie"
+  @update="onUpdateSelectTie"
+  @cancel="onCancelSelectTie"
+  />
+
 </template>
 
 <script>
 import {useCoderStore} from "@/stores/coder.js";
 import coderApi from '@/api/coderApi.js';
+import CoderModal from "@/components/modal/CoderModal.vue";
 
 export default {
   name: 'TieList',
+  components: {
+    CoderModal,
+  },
   data() {
     return {
       // TIE 목록 예시
       ties_list: [],
       selectedDay: null,
+      showModal: false,
+      selectedTie: null,
     }
   },
   async mounted() {
@@ -84,7 +102,6 @@ export default {
           dayMap.set(tie.day_num, tie.game_date);
         }
       }
-
       // dayMap을 배열 [{ day_num, game_date }, ...] 로 변환
       // 그리고 day_num 기준 오름차순 정렬
       const result = [];
@@ -93,6 +110,11 @@ export default {
       }
       return result.sort((a, b) => a.day_num - b.day_num);
     },
+    // 모달 메시지 구성 (선택된 tie가 있을 때만)
+    modalMessage() {
+      if (!this.selectedTie) return '';
+      return `${this.selectedTie.tie_no} TIE(${this.selectedTie.game_date})를 CODER로 이동하시겠습니까?`;
+    }
   },
   methods: {
     goBack() {
@@ -106,10 +128,26 @@ export default {
       this.$router.push('/codertie')
     },
     selectTie(tie) {
-      const coderStore = useCoderStore()
-      coderStore.setTieData(tie.tie_no, tie.game_date)
-      this.$router.push({ name: 'coder' })
+      // tie 항목 클릭 시 모달 표시
+      this.selectedTie = tie;
+      this.showModal = true;
     },
+    // 모달 확인 버튼
+    onConfirmSelectTie() {
+      // CODER 로직
+      const coderStore = useCoderStore();
+      coderStore.setTieData(this.selectedTie.tie_no, this.selectedTie.game_date);
+      this.showModal = false;
+      this.$router.push({ name: 'coder' });
+    },
+    onUpdateSelectTie() {
+      // 수정 로직
+      this.showModal = false;
+      this.$router.push('/codertie');
+    },
+    onCancelSelectTie() {
+      this.showModal = false;
+    }
   },
 }
 </script>

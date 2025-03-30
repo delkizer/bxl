@@ -133,11 +133,11 @@
 
 <script>
 import tourApi from '@/api/tourApi.js';
-import ConfirmationModal from "@/components/ConfirmationModal.vue";
+import Confirmation from "@/components/modal/Confirmation.vue";
 
 export default {
   name: "TournamentInfoPage",
-  components: {ConfirmationModal},
+  components: {ConfirmationModal: Confirmation},
   data() {
     return {
       tournament_title: "",

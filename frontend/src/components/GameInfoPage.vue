@@ -131,12 +131,12 @@
 </template>
 
 <script>
-import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import Confirmation from '@/components/modal/Confirmation.vue'
 
 export default {
   name: 'GameInfoPage',
   components: {
-    ConfirmationModal
+    ConfirmationModal: Confirmation
   },
   data() {
     return {

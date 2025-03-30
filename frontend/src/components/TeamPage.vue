@@ -196,11 +196,11 @@
 <script>
 import teamApi from "@/api/teamApi.js";
 import tourApi  from "@/api/tourApi.js";
-import ConfirmationModal from "@/components/ConfirmationModal.vue";
+import Confirmation from "@/components/modal/Confirmation.vue";
 
 export default {
   name: 'TeamPage',
-  components: {ConfirmationModal},
+  components: {ConfirmationModal: Confirmation},
 
   data() {
     return {
