@@ -102,13 +102,13 @@
             <!-- matchItem.team1_player.player_info -->
             <div class="player-row-line">
               <div
-                v-for="(pId, pIndex) in matchItem.team1_player.player_info"
+                v-for="(pId, pIndex) in matchItem.team1_player"
                 :key="pIndex"
                 class="player-select-wrap"
               >
                 <select
                   class="form-control player-select"
-                  v-model="matchItem.team1_player.player_info[pIndex]"
+                  v-model="matchItem.team1_player[pIndex]"
                 >
                   <option value="">-- 선수 --</option>
                   <option
@@ -129,13 +129,13 @@
             <!-- matchItem.team2_player.player_info -->
             <div class="player-row-line">
               <div
-                v-for="(pId, pIndex) in matchItem.team2_player.player_info"
+                v-for="(pId, pIndex) in matchItem.team2_player"
                 :key="pIndex"
                 class="player-select-wrap"
               >
                 <select
                   class="form-control player-select"
-                  v-model="matchItem.team2_player.player_info[pIndex]"
+                  v-model="matchItem.team2_player[pIndex]"
                 >
                   <option value="">-- 선수 --</option>
                   <option
@@ -157,6 +157,29 @@
         <button class="btn btn-save" @click="handleSave">저장</button>
         <button class="btn btn-cancel" @click="handleCancel">종료</button>
       </div>
+
+      <!-- 저장 모달 -->
+      <ConfirmationModal
+        :visible="showSaveModal"
+        title="저장 확인"
+        message="저장을 진행하시겠습니까?"
+        confirmButtonLabel="확인"
+        cancelButtonLabel="취소"
+        @confirm="handleSaveConfirm"
+        @cancel="handleSaveCancel"
+      />
+
+      <!-- 종료 모달 -->
+      <ConfirmationModal
+        :visible="showExitModal"
+        title="종료 확인"
+        message="Home으로 이동하시겠습니까?"
+        confirmButtonLabel="확인"
+        cancelButtonLabel="취소"
+        @confirm="handleExitConfirm"
+        @cancel="handleExitCancel"
+      />
+
     </div><!-- /form-container -->
   </div><!-- /game-info-page -->
 </template>
@@ -166,9 +189,11 @@
 import tourApi from "@/api/tourApi.js";
 import teamApi from "@/api/teamApi.js";
 import coderApi from "@/api/coderApi.js";
+import ConfirmationModal from "@/components/ConfirmationModal.vue";
 
 export default {
   name: "GameInfoPage",
+  components: {ConfirmationModal},
   data() {
     return {
       gameData: {
@@ -182,36 +207,36 @@ export default {
             match_no: 1,
             match_type: "",
             match_point: 1,
-            team1_player: { player_info: [] },
-            team2_player: { player_info: [] }
+            team1_player: [],
+            team2_player: []
           },
           {
             match_no: 2,
             match_type: "",
             match_point: 1,
-            team1_player: { player_info: [] },
-            team2_player: { player_info: [] }
+            team1_player: [],
+            team2_player: []
           },
           {
             match_no: 3,
             match_type: "",
             match_point: 1,
-            team1_player: { player_info: [] },
-            team2_player: { player_info: [] }
+            team1_player: [],
+            team2_player: []
           },
           {
             match_no: 4,
             match_type: "",
             match_point: 1,
-            team1_player: { player_info: [] },
-            team2_player: { player_info: [] }
+            team1_player: [],
+            team2_player: []
           },
           {
             match_no: 5,
             match_type: "",
             match_point: 1,
-            team1_player: { player_info: [] },
-            team2_player: { player_info: [] }
+            team1_player: [],
+            team2_player: []
           }
         ]
       },
@@ -228,7 +253,11 @@ export default {
         { match_no: 3, match_type: "" },
         { match_no: 4, match_type: "" },
         { match_no: 5, match_type: "" }
-      ]
+      ],
+
+      // 모달 표시 여부
+      showSaveModal: false,
+      showExitModal: false
     };
   },
   mounted() {
@@ -319,8 +348,8 @@ export default {
       matchItem.match_point = neededPlayers;
 
       // 기존 선수 배열
-      let oldT1 = matchItem.team1_player.player_info; // ex) ["선수A", "", ...]
-      let oldT2 = matchItem.team2_player.player_info;
+      let oldT1 = matchItem.team1_player; // ex) ["선수A", "", ...]
+      let oldT2 = matchItem.team2_player;
 
       // (A) team1 길이 조절
       if (oldT1.length < neededPlayers) {
@@ -343,8 +372,8 @@ export default {
       }
 
       // 수정된 배열을 다시 대입
-      matchItem.team1_player.player_info = oldT1;
-      matchItem.team2_player.player_info = oldT2;
+      matchItem.team1_player = oldT1;
+      matchItem.team2_player = oldT2;
 
       // 디버깅용
       console.log(`[onMatchTypeChange] idx=${idx}, neededPlayers=${neededPlayers}`);
@@ -367,14 +396,49 @@ export default {
     handleSave() {
       // 최종 전송 데이터: this.gameData
       console.log(">>> 최종 데이터:", this.gameData);
-      alert("저장 버튼 클릭\n\n" + JSON.stringify(this.gameData, null, 2));
-
-      // 여기서 실제 API POST 요청:
-      // axios.post("/api/game-save", this.gameData).then( ... )
+      this.showSaveModal = true;
+    },
+    handleSaveConfirm() {
+      // 실제 API POST 요청
+      this.postTiePage(this.gameData)
+        .then((res) => {
+          console.log(">>> 저장 완료:", res.data);
+          // 저장 후 모달 닫기
+          this.showSaveModal = false;
+          this.$router.push("/coderlist");
+        })
+        .catch((err) => {
+          console.error(err);
+          alert("저장 실패!");
+        });
+    },
+    handleSaveCancel() {
+      this.showSaveModal = false;
     },
     handleCancel() {
-      alert("종료 버튼 클릭");
-    }
+      this.showSaveModal = false;
+    },
+    // 종료 모달에서 확인 -> Home으로 이동
+    handleExitConfirm() {
+      this.showExitModal = false;
+      // 라우터 경로에 맞게 수정
+      this.$router.push("/");
+    },
+    // 종료 모달에서 취소
+    handleExitCancel() {
+      this.showExitModal = false;
+    },
+    async postTiePage(params = {}) {
+      try{
+        const response = await  coderApi.postTiePage(params);
+        console.log(response);
+        return response;
+      } catch (error) {
+        console.error(">>> postTiePage API 오류:", error);
+        throw error;
+      }
+
+    },
   }
 };
 </script>

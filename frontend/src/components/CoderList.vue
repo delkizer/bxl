@@ -31,7 +31,7 @@
         <p>
           {{ tie.team1_name }}
           {{ tie.team1_point_sum }} : {{ tie.team2_point_sum }}
-          {{ tie.team2_name }}({{ tie.team2_nation_code }})
+          {{ tie.team2_name }}
         </p>
       </div>
     </section>

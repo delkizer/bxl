@@ -33,6 +33,7 @@ class Team:
                 FROM bxl.team_info A
                 LEFT OUTER JOIN bxl.player_info B ON A.team_code = B.team_code
                 WHERE A.team_code = :team_code
+                ORDER BY gender ASC, B.nick_name ASC 
             """)
             result = session.execute(query, {
                 "team_code": team_code
