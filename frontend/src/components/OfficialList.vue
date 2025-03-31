@@ -1,0 +1,335 @@
+<template>
+  <div class="official-list-page">
+    <h2>Officials Management</h2>
+
+    <!-- 상단 기능 버튼 -->
+    <div class="top-bar">
+      <button class="btn" @click="showMultiAddModal = true">
+        Add Multiple Officials
+      </button>
+      <button
+        class="btn"
+        @click="deleteSelectedOfficials"
+        :disabled="selectedOfficials.length === 0"
+      >
+        Delete Selected
+      </button>
+    </div>
+
+    <!-- 목록 테이블 -->
+    <table class="official-table">
+      <thead>
+        <tr>
+          <th>
+            <!-- 전체 선택 -->
+            <input type="checkbox" @change="toggleSelectAll($event)" />
+          </th>
+          <!-- 질문에서 UUID는 화면에 노출 안 함 -->
+          <th>First Name</th>
+          <th>Family Name</th>
+          <th>Nickname</th>
+          <th>Gender</th>
+          <th>Nation Code</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="official in officialList.value" :key="official.official_uuid">
+          <td>
+            <!-- 각 행의 체크박스, selectedOfficials 배열로 관리 -->
+            <input
+              type="checkbox"
+              :value="official.official_uuid"
+              v-model="selectedOfficials.value"
+            />
+          </td>
+          <td>{{ official.first_name }}</td>
+          <td>{{ official.family_name }}</td>
+          <td>{{ official.nickname }}</td>
+          <td>{{ official.gender }}</td>
+          <td>{{ official.nation_code }}</td>
+          <td>
+            <button class="btn" @click="openEditModal(official)">Edit</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- (A) 여러 명 동시 추가 모달 -->
+    <div v-if="showMultiAddModal.value" class="modal">
+      <div class="modal-content">
+        <h3>Add Multiple Officials</h3>
+        <table class="multi-add-table">
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Family Name</th>
+              <th>Nickname</th>
+              <th>Gender</th>
+              <th>Nation Code</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(row, idx) in newOfficials.value"
+              :key="idx"
+            >
+              <td><input type="text" v-model="row.first_name" /></td>
+              <td><input type="text" v-model="row.family_name" /></td>
+              <td><input type="text" v-model="row.nickname" /></td>
+              <td><input type="text" v-model="row.gender" /></td>
+              <td><input type="text" v-model="row.nation_code" /></td>
+              <td>
+                <button class="btn" @click="removeNewOfficial(idx)">X</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="button-container">
+          <button class="btn" @click="addNewOfficialRow">+ Add Row</button>
+          <button class="btn" @click="confirmMultiAdd">Save</button>
+          <button class="btn" @click="closeMultiAddModal">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- (B) 개별 수정 모달 -->
+    <div v-if="showEditModal.value" class="modal">
+      <div class="modal-content">
+        <h3>Edit Official</h3>
+
+        <div class="form-row">
+          <label>First Name</label>
+          <input type="text" v-model="editOfficial.value.first_name" />
+        </div>
+        <div class="form-row">
+          <label>Family Name</label>
+          <input type="text" v-model="editOfficial.value.family_name" />
+        </div>
+        <div class="form-row">
+          <label>Nickname</label>
+          <input type="text" v-model="editOfficial.value.nickname" />
+        </div>
+        <div class="form-row">
+          <label>Gender</label>
+          <input type="text" v-model="editOfficial.value.gender" />
+        </div>
+        <div class="form-row">
+          <label>Nation Code</label>
+          <input type="text" v-model="editOfficial.value.nation_code" />
+        </div>
+
+        <div class="button-container">
+          <button class="btn" @click="saveEdit">Save</button>
+          <button class="btn" @click="cancelEdit">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+// import officialApi from '@/api/officialApi' // 실제 API 모듈 (예시)
+
+// 1) Officials 목록 (테이블)
+const officialList = ref<any[]>([])
+
+// 2) 선택된 체크박스 리스트 (UUID 배열)
+const selectedOfficials = ref<string[]>([])
+
+// 3) 다중 등록 모달 표시 여부 + 입력 데이터(newOfficials)
+const showMultiAddModal = ref(false)
+const newOfficials = ref<any[]>([]) // [{first_name:'', family_name:'', ...}, {...}]
+
+// 4) 개별 수정 모달 표시 여부 + editOfficial
+const showEditModal = ref(false)
+const editOfficial = ref<any>({
+  // structure: { official_uuid, first_name, family_name, nickname, gender, nation_code }
+})
+
+// ========== onMounted: 초기 로딩 예시 ==========
+onMounted(() => {
+  // 예시: 로컬 하드코딩 / 실제로는 API로 불러오기
+  officialList.value = [
+    {
+      official_uuid: '467ed60b-d159-41bd-be2a-37846101183e',
+      first_name: 'Иван',
+      family_name: 'Иванов',
+      nickname: 'Ваня',
+      gender: '000M',
+      nation_code: 'RUS'
+    },
+    {
+      official_uuid: '23efbf9d-b189-40f4-93cb-4fffd49a3592',
+      first_name: 'Anak Agung',
+      family_name: 'Putra',
+      nickname: 'Agung',
+      gender: '000M',
+      nation_code: 'IDN'
+    }
+  ]
+})
+
+// ========== (A) 여러 명 동시 추가 메서드들 ==========
+function addNewOfficialRow() {
+  newOfficials.value.push({
+    first_name: '',
+    family_name: '',
+    nickname: '',
+    gender: '',
+    nation_code: ''
+  })
+}
+
+function removeNewOfficial(idx: number) {
+  newOfficials.value.splice(idx, 1)
+}
+
+function confirmMultiAdd() {
+  // 실제로는 API 호출 (POST /api/officials)으로 newOfficials.value 배열을 전달
+  // officialApi.postOfficials(newOfficials.value).then(...)
+
+  // 예시로 localList에 추가
+  officialList.value.push(...newOfficials.value.map(item => ({
+    official_uuid: crypto.randomUUID(),
+    ...item
+  })))
+  closeMultiAddModal()
+}
+
+function closeMultiAddModal() {
+  showMultiAddModal.value = false
+  // 입력 필드 초기화
+  newOfficials.value = []
+}
+
+// ========== (B) 개별 수정 메서드들 ==========
+function openEditModal(official: any) {
+  showEditModal.value = true
+  // 복사해서 editOfficial에 할당
+  editOfficial.value = { ...official }
+}
+
+function saveEdit() {
+  // 실제로는 officialApi.putOfficial(editOfficial.value)
+  // localList에서 해당 uuid 찾아 업데이트
+  const idx = officialList.value.findIndex(o => o.official_uuid === editOfficial.value.official_uuid)
+  if (idx !== -1) {
+    officialList.value[idx] = { ...editOfficial.value }
+  }
+  cancelEdit()
+}
+
+function cancelEdit() {
+  showEditModal.value = false
+  editOfficial.value = {}
+}
+
+// ========== (C) 다중 삭제 메서드 ==========
+function deleteSelectedOfficials() {
+  // 실제로는 officialApi.deleteOfficials(selectedOfficials.value)
+  // localList에서 해당 uuid들 제거
+  officialList.value = officialList.value.filter(
+    o => !selectedOfficials.value.includes(o.official_uuid)
+  )
+  selectedOfficials.value = []
+}
+
+// ========== (D) 전체 선택 체크박스 ==========
+function toggleSelectAll(e: Event) {
+  const checked = (e.target as HTMLInputElement).checked
+  if (checked) {
+    // 전체 uuid를 selectedOfficials에 넣음
+    const allUuids = officialList.value.map(o => o.official_uuid)
+    selectedOfficials.value = allUuids
+  } else {
+    // 해제
+    selectedOfficials.value = []
+  }
+}
+</script>
+
+<style scoped>
+.official-list-page {
+  position: absolute;
+  width: 800px;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #f7f7f7;
+  padding: 16px;
+  border-radius: 8px;
+  top: 10%;
+  left: 50%;     /* 수평 중앙 */
+  transform: translate(-50%); /* 자기 크기의 절반만큼 이동해 완전 중앙 정렬 */
+}
+
+.top-bar {
+  margin-bottom: 20px;
+}
+
+.official-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.official-table th,
+.official-table td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.multi-add-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.multi-add-table th, .multi-add-table td {
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+}
+
+.btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+.btn:hover {
+  background-color: #45a049;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background-color: #fff;
+  width: 600px;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.button-container {
+  text-align: right;
+  margin-top: 10px;
+}
+</style>

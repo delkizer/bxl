@@ -4,6 +4,7 @@ import MainPage from '@/components/MainPage.vue'
 import CoderPage from '@/components/CoderPage.vue'
 import CoderTie from '@/components/CoderTie.vue'
 import CoderList from '@/components/CoderList.vue'
+import CoderOfficials  from "@/components/CoderOfficials.vue";
 import ScorerPage from '@/components/ScorerPage.vue'
 import GameInfoPage from "@/components/GameInfoPage.vue";
 import TourPage from "@/components/TourPage.vue";
@@ -11,6 +12,7 @@ import TourList from "@/components/TourList.vue";
 import TeamList from "@/components/TeamList.vue";
 import TeamPage from "@/components/TeamPage.vue";
 import LoginPage from "@/components/Login.vue";
+import OfficialList  from "@/components/OfficialList.vue";
 import {useAuthStore} from "@/stores/auth";
 
 const routes = [
@@ -21,6 +23,7 @@ const routes = [
   { path: '/coder',  name: 'coder', component: CoderPage, meta: { requiresAuth: true } },
   { path: '/coderlist', name: 'coderlist', component: CoderList, meta: { requiresAuth: true } },
   { path: '/codertie', name: 'codertie', component: CoderTie, meta: { requiresAuth: true } },
+  { path: '/coderofficials', name: 'codertie', component: CoderOfficials, meta: { requiresAuth: true } },
 
   { path: '/scorer', name: 'scorer', component: ScorerPage, meta: { requiresAuth: true } },
 
@@ -31,6 +34,8 @@ const routes = [
 
   { path: '/tourlist', name: 'tourlist', component: TourList, meta: { requiresAuth: true } },
   { path: '/tourpage/:uuid?', name: 'tourpage', component: TourPage, meta: { requiresAuth: true } },
+
+  { path: '/officiallist', name: 'officiallist', component: OfficialList, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

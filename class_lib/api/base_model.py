@@ -1,5 +1,7 @@
 import uuid
 from typing import Optional, List
+
+from fastapi import Query
 from pydantic import BaseModel, Field
 
 class UserLogin(BaseModel):
@@ -142,3 +144,35 @@ class TieInfo(BaseModel):
     team1_code: int = Field(...,description="팀1 코드 (예: 1)")
     team2_code: int = Field(...,description="팀2 코드 (예: 2)")
     match_info: List[MatchInfo] = Field(...,description="매치 정보 리스트 (최대 5경기)")
+
+class OfficialInfo(BaseModel):
+    """
+    운영 요원(Official) 정보 구조
+
+    - `official_uuid`: 운영 요원의 고유 UUID (API 내부에서 자동으로 생성됨)
+    - `first_name`: 운영 요원의 이름 (예: 길동)
+    - `family_name`: 운영 요원의 성 (예: 홍)
+    - `nickname`: 운영 요원의 별칭
+    - `gender`: 운영 요원의 성별 (예: M, F, Other 등)
+    """
+    official_uuid: uuid.UUID = Field( default=None, description="운영 요원의 고유 UUID (API에서 자동 생성되며, 별도 입력 불필요)" )
+    first_name: str = Field( ..., description="운영 요원의 이름 (예: 길동)" )
+    family_name: str = Field( ..., description="운영 요원의 성 (예: 홍)" )
+    nickname: str = Field(..., description="운영 요원의 별칭 (필요 시 작성)" )
+    gender: str = Field( ..., description="운영 요원의 성별 (예: M, F, Other 등)" )
+    nation_code: str = Field(...,description="운영 요원의 3자리 국가 코드 (예: KOR, USA 등)")
+
+
+class GameOfficialInfo(BaseModel):
+    """
+    게임에 할당되는 운영 요원(Officials)에 대한 정보 모델
+
+    - `game_uuid`: 경기 식별자 (bxl.game_info.game_uuid)
+    - `official_uuid`: 운영 요원 식별자 (bxl.official_info.official_uuid)
+    - `official_role`: 운영 요원 역할 (예: 'UMPIRE', 'SERVICE_JUDGE', 'LINE_JUDGE', 'REFEREE', 'SCORER' 등)
+    """
+
+    game_uuid: uuid.UUID = Field(..., description="경기 식별자 (bxl.game_info.game_uuid)" )
+    official_uuid: uuid.UUID = Field(..., description="운영 요원 식별자 (bxl.official_info.official_uuid)" )
+    official_role: str = Field(..., description="운영 요원 역할 (예: UMPIRE, SERVICE_JUDGE, LINE_JUDGE, REFEREE, SCORER 등)" )
+

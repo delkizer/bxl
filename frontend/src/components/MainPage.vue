@@ -1,5 +1,6 @@
 <template>
   <div class="main-container">
+    <!-- 첫 번째 줄 -->
     <div class="buttons-wrapper">
       <div class="button corder-button" @click="goToCoderPage">
         <p>BXL</p>
@@ -10,15 +11,25 @@
         <p>Scorer's Page</p>
       </div>
     </div>
-  </div>
-    <div class="buttons-wrapper additional-buttons">
-    <div class="button tour-button" @click="goToTourPage">
-      <p>BXL</p>
-      <p>Tour's Page</p>
+
+    <!-- 두 번째 줄 -->
+    <div class="buttons-wrapper">
+      <div class="button tour-button" @click="goToTourPage">
+        <p>BXL</p>
+        <p>Tour's Page</p>
+      </div>
+      <div class="button team-button" @click="goToGamePage">
+        <p>BXL</p>
+        <p>Team's Page</p>
+      </div>
     </div>
-    <div class="button team-button" @click="goToGamePage">
-      <p>BXL</p>
-      <p>Team's Page</p>
+
+    <!-- 세 번째 줄 -->
+    <div class="buttons-wrapper">
+      <div class="button official-button" @click="goToOfficialPage">
+        <p>BXL</p>
+        <p>Official's Page</p>
+      </div>
     </div>
   </div>
 </template>
@@ -34,49 +45,48 @@ export default {
       this.$router.push('/scorer');
     },
     goToTourPage() {
-      this.$router.push('/tourlist')
+      this.$router.push('/tourlist');
     },
     goToGamePage() {
-      this.$router.push('/teamlist')
+      this.$router.push('/teamlist');
+    },
+    goToOfficialPage() {
+      this.$router.push('/officiallist');
     }
   }
 }
 </script>
 
 <style scoped>
+/* 브라우저 전체를 100%로 쓰기 위해 html, body 초기 세팅 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* 메인 컨테이너를 화면 정중앙에 배치 */
 .main-container {
-  width: 100%;
-  height: 100vh;
-  background-color: #4b7cb6;
-  position: relative;
-  overflow: hidden;
+  position: absolute;
+  width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+  top: 50%;      /* 수직 중앙 */
+  left: 50%;     /* 수평 중앙 */
+  transform: translate(-50%, -50%); /* 자기 크기의 절반만큼 이동해 완전 중앙 정렬 */
 }
 
+/* 각 줄(버튼 묶음)을 가로로 배치하고 중앙 정렬 */
 .buttons-wrapper {
-  position: fixed;
-  top: 30%;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: center;
-  transform: translateY(-50%);
+  margin: 20px 0; /* 줄 간격 */
 }
 
-.additional-buttons {
-  /* 새로 추가된 버튼 영역 스타일 */
-  position: fixed;
-  top: 65%;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  transform: translateY(-50%);
-}
-
-
+/* 공통 버튼 스타일 */
 .button {
   width: 300px;
-  height: 275px;
+  height: 165px; /* 기존 높이(275px)의 약 60% */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -85,57 +95,49 @@ export default {
   font-family: Arial, sans-serif;
   cursor: pointer;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-  flex-shrink: 0;
+  margin: 0 20px; /* 버튼 간 좌우 간격 */
 }
 
+/* 글자 스타일 */
 .button p {
-  margin: 10px 0;
+  margin: 5px 0;
   font-size: 32px;
-  font-weight: normal;
   text-align: center;
 }
 
+/* 버튼별 색상 구분 */
 .corder-button {
   background-color: red;
   color: black;
-  margin-right: 40px;
 }
 
 .scorer-button {
   background-color: white;
   color: black;
-  margin-left: 40px;
 }
 
 .tour-button {
   background-color: #4CAF50;
   color: black;
-  margin-right: 40px;
 }
 
 .team-button {
   background-color: #FFC107;
   color: black;
-  margin-left: 40px;
 }
 
+.official-button {
+  background-color: #9c27b0;
+  color: white;
+}
 
-
-/* 화면이 작을 때 */
+/* 반응형 처리: 960px 이하에서는 한 줄에 2개 버튼이 겹치지 않도록 세로로 배치 */
 @media screen and (max-width: 960px) {
   .buttons-wrapper {
     flex-direction: column;
-    align-items: center;
   }
-
-  .corder-button {
-    margin-right: 0;
-    margin-bottom: 40px;
-  }
-
-  .scorer-button {
-    margin-left: 0;
+  .button {
+    margin: 10px 0;
   }
 }
-
 </style>

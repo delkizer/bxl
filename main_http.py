@@ -1,6 +1,6 @@
 import uuid
 
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import FastAPI, Path, HTTPException, status, Depends, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,11 +11,13 @@ from class_config.class_log import ConfigLogger
 from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 
-from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo, TeamAndPlayerInfo, TieInfo
+from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo, TeamAndPlayerInfo, TieInfo, \
+    OfficialInfo, GameOfficialInfo
 from class_lib.api.auth import Auth
 from class_lib.api.coder import Coder
 from class_lib.api.team import Team
 from class_lib.api.tour import Tour
+from class_lib.api.officials import Officials
 from define.define_code import DefineCode
 
 # 기본 클래스 설정
@@ -29,7 +31,7 @@ auth = Auth( logger )
 coder = Coder( logger )
 tour = Tour( logger )
 team = Team( logger )
-
+officials = Officials( logger )
 
 # title, description 등 OpenAPI 문서용 설정을 줄 수 있음
 app = FastAPI(
@@ -312,4 +314,126 @@ async def get_tiemodify(
     :return:
     """
     result = coder.modify_tie(tie_info)
+    return result
+
+@app.get("/api/officials", tags=["Officail"])
+async def get_officials(
+        request: Request,
+        #official_info: OfficialInfo = Depends(officials.official_info_query),
+):
+    """
+    :param request:
+    :return:
+    """
+    #official_info: OfficialInfo = OfficialInfo(  )
+    result = officials.get_officials(  )
+    return result
+
+@app.post("/api/officials", tags=["Official"])
+async def get_officials(
+        request: Request,
+        official_list: List[OfficialInfo],
+):
+    """
+    :param request:
+    :param official_list:
+    :return:
+    """
+
+    result = officials.post_officials(official_list)
+    return result
+
+@app.put("/api/officials", tags=["Official"])
+async def put_officials(
+        request: Request,
+        official_list: List[OfficialInfo],
+):
+    """
+    :param request:
+    :param official_list:
+    :return:
+    """
+    result = officials.put_officials(official_list)
+    return result
+
+@app.delete("/api/officials", tags=["Official"])
+async def delete_officials(
+        request: Request,
+        official_list: List[OfficialInfo],
+):
+    """
+    :param request:
+    :param official_list:
+    :return:
+    """
+    result = officials.delete_officials(official_list)
+    return result
+
+@app.post("/api/gameofficials", tags=["Official"])
+async def post_gameofficials(
+        request: Request,
+        gameofficial_info: List[GameOfficialInfo],
+):
+    """
+    :param request:
+    :param gameofficial_info:
+    :return:
+    """
+    result = officials.post_gameofficial(gameofficial_info)
+    return result
+
+@app.put("/api/gameofficials", tags=["Official"])
+async def put_gameofficials(
+        request: Request,
+        gameofficial_info: List[GameOfficialInfo],
+):
+    """
+    :param request:
+    :param gameofficial_info:
+    :return:
+    """
+    result = officials.put_gameofficials(gameofficial_info)
+    return result
+
+@app.delete("/api/gameofficials", tags=["Official"])
+async def delete_gameofficials(
+        request: Request,
+        gameofficial_info: List[GameOfficialInfo],
+):
+    """
+    :param request:
+    :param gameofficial_info:
+    :return:
+    """
+    result = officials.delete_gameofficials(gameofficial_info)
+    return result
+
+@app.get("/api/gameuuids", tags=["GOfficial"])
+async def get_gameuuids(
+        request: Request,
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+        tie_no: Optional[int] = Query(None, description="토너먼트에 해당하는 tie no"),
+        match_no: Optional[int] = Query(None, description="토너먼트에 해당하는 match no"),
+):
+    """
+    :param request:
+    :param tournament_uuid:
+    :param tie_no:
+    :param match_no:
+    :return:
+    """
+    result = officials.get_gameuuids(tournament_uuid, tie_no, match_no)
+    return result
+
+@app.get("/api/gameties", tags=["GOfficial"])
+async def get_gameties(
+        request: Request,
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+):
+    """
+    :param request:
+    :param tournament_uuid:
+    :return:
+    """
+    result = officials.get_gameties(tournament_uuid)
     return result
