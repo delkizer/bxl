@@ -3,18 +3,21 @@ import { defineStore } from "pinia";
 export const useCoderStore = defineStore('coderStore', {
   // state: 저장할 상태(데이터)
   state: () => ({
+    tournament_uuid: null,
     tieNo: null,
     gameDate: null
   }),
 
   // actions: state를 변경하거나 서버 통신 로직 등
   actions: {
-    setTieData(tieNo, gameDate) {
+    setTieData(tournament_uuid, tieNo, gameDate) {
+      this.tournament_uuid = tournament_uuid;
       this.tieNo = tieNo
       this.gameDate = gameDate
     },
 
     clearTieData() {
+      this.tournament_uuid = null;
       this.tieNo = null
       this.gameDate = null
     }

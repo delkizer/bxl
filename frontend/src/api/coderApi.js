@@ -8,7 +8,13 @@ export default {
   getMatchTypeList(params = {}) {
     return apiClient.get('/api/matchtype/list', { params })
   },
+  getTiePage(params = {}) {
+    return apiClient.get('/api/tiepage', { params })
+  },
   postTiePage(params = {}) {
     return apiClient.post('/api/tiepage', params )
+  },
+  postTieModify(params = {}) {
+    return apiClient.post('/api/tiemodify', params )
   }
 }

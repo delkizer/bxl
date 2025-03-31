@@ -125,6 +125,8 @@ export default {
       this.$router.push('/')
     },
     goTie() {
+      const coderStore = useCoderStore();
+      coderStore.clearTieData()
       this.$router.push('/codertie')
     },
     selectTie(tie) {
@@ -136,12 +138,16 @@ export default {
     onConfirmSelectTie() {
       // CODER 로직
       const coderStore = useCoderStore();
-      coderStore.setTieData(this.selectedTie.tie_no, this.selectedTie.game_date);
+      coderStore.setTieData(
+        this.selectedTie.tournament_uuid, this.selectedTie.tie_no, this.selectedTie.game_date);
       this.showModal = false;
       this.$router.push({ name: 'coder' });
     },
     onUpdateSelectTie() {
       // 수정 로직
+      const coderStore = useCoderStore();
+      coderStore.setTieData(
+        this.selectedTie.tournament_uuid, this.selectedTie.tie_no, this.selectedTie.game_date,);
       this.showModal = false;
       this.$router.push('/codertie');
     },

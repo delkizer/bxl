@@ -8,7 +8,10 @@
           <label>대회정보</label>
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="gameData.tournament_uuid" @change="onTournamentChange">
+          <select class="form-control"
+                  v-model="gameData.tournament_uuid"
+                  @change="onTournamentChange"
+                  :disabled="isEditMode" >
             <option value="">-- 대회 선택 --</option>
             <option
               v-for="tour in tourList"
@@ -20,10 +23,10 @@
           </select>
         </div>
         <div class="form-group middle">
-          <input type="date" class="form-control" v-model="gameData.game_date" />
+          <input type="date" class="form-control" v-model="gameData.game_date" :disabled="isEditMode" />
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="gameData.tie_no">
+          <select class="form-control" v-model="gameData.tie_no" :disabled="isEditMode">
             <option v-for="n in 9" :key="n" :value="n">
               {{ n }} Tie
             </option>
@@ -37,7 +40,7 @@
           <label>Team1</label>
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="gameData.team1_code" @change="onTeam1Change">
+          <select class="form-control" v-model="gameData.team1_code" @change="onTeam1Change" :disabled="isEditMode">
             <option value="">-- 팀 선택 --</option>
             <option v-for="team in teamList" :key="team.team_code" :value="team.team_code" :disabled="team.team_code === gameData.team2_code" >
               {{ team.team_name }}
@@ -49,7 +52,7 @@
           <label>Team2</label>
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="gameData.team2_code" @change="onTeam2Change">
+          <select class="form-control" v-model="gameData.team2_code" @change="onTeam2Change" :disabled="isEditMode">
             <option value="">-- 팀 선택 --</option>
             <option v-for="team in teamList" :key="team.team_code" :value="team.team_code" :disabled="team.team_code === gameData.team1_code" >
               {{ team.team_name }}
@@ -76,6 +79,7 @@
               class="form-control type-select"
               v-model="matchItem.match_type"
               @change="onMatchTypeChange(idx)"
+              :disabled="isEditMode"
             >
               <option value="">-- 매치타입 --</option>
               <option
@@ -89,7 +93,7 @@
             </select>
 
             <!-- 점수 (자동 연동) -->
-            <select class="form-control point-select" v-model="matchItem.match_point">
+            <select class="form-control point-select" v-model="matchItem.match_point" :disabled="isEditMode">
               <option value="1">1점</option>
               <option value="2">2점</option>
               <option value="3">3점</option>
@@ -190,6 +194,7 @@ import tourApi from "@/api/tourApi.js";
 import teamApi from "@/api/teamApi.js";
 import coderApi from "@/api/coderApi.js";
 import Confirmation from "@/components/modal/Confirmation.vue";
+import {useCoderStore} from "@/stores/coder.js";
 
 export default {
   name: "GameInfoPage",
@@ -260,7 +265,21 @@ export default {
       showExitModal: false
     };
   },
+  computed: {
+    isEditMode() {
+      const coderStore = useCoderStore();
+      return !! coderStore.tieNo;
+    }
+  },
   mounted() {
+    if (this.isEditMode) {
+      const coderStore = useCoderStore();
+      let tournament_uuid = coderStore.tournament_uuid;
+      let tie_no = coderStore.tieNo;
+      let game_date = coderStore.gameDate;
+      coderStore.setTieData(
+        tournament_uuid, tie_no, game_date,);
+    }
     this.fetchInitialData();
   },
   methods: {
@@ -274,13 +293,35 @@ export default {
         // 2) 매치타입 목록
         const matchRes = await coderApi.getMatchTypeList();
         this.matchTypeList = matchRes.data;
-        // [ {code: "MSIG", match_type:"남자 단식"}, ... ]
 
         // 3) 팀 목록 (선택된 대회가 있다면 그에 맞춰 가져오도록 할 수도 있음)
-        //    or, 대회 선택 시점에 가져올 수도 있음.
-        //    여기서는 단순히 전체 팀 목록이라 가정
-        const teamRes = await teamApi.getTeamList(/* params if needed */);
+        const teamRes = await teamApi.getTeamList();
         this.teamList = teamRes.data;
+
+        // 4) 수정 모드일 경우 Tie의 데이터를 호출
+        if (this.isEditMode) {
+          const coderStore = useCoderStore();
+          const tieRes = await coderApi.getTiePage({
+            tournament_uuid: coderStore.tournament_uuid,
+            tie_no: coderStore.tieNo,
+            game_date: coderStore.gameDate
+          });
+          this.gameData = tieRes.data;
+
+          if (this.gameData.team1_code) {
+            await this.onTeam1Change();
+          }
+          if (this.gameData.team2_code) {
+            await this.onTeam2Change();
+          }
+
+          this.gameData.match_info.forEach((matchItem, idx) => {
+            if (matchItem.match_type) {
+              // onMatchTypeChange가 "필요 플레이어 수"만큼 team1_player, team2_player 배열을 자르는 로직이라면 호출
+              this.onMatchTypeChange(idx);
+            }
+          });
+        }
       } catch (error) {
         console.error(error);
       }
@@ -324,7 +365,7 @@ export default {
       teamApi.getPlayerList(tCode)
         .then(res => {
           this.playerListTeam2 = res.data;
-          console.log("Team2 Players:", this.playerListTeam2);
+          //console.log("Team2 Players:", this.playerListTeam2);
         })
         .catch(err => console.error(err));
     },
@@ -416,7 +457,7 @@ export default {
       this.showSaveModal = false;
     },
     handleCancel() {
-      this.showSaveModal = false;
+      this.showExitModal = true;
     },
     // 종료 모달에서 확인 -> Home으로 이동
     handleExitConfirm() {
@@ -430,8 +471,14 @@ export default {
     },
     async postTiePage(params = {}) {
       try{
-        const response = await  coderApi.postTiePage(params);
-        console.log(response);
+        let response
+        if ( this.isEditMode ) {
+          console.log(params)
+          response = await  coderApi.postTieModify(params);
+        }
+        else {
+          response = await  coderApi.postTiePage(params);
+        }
         return response;
       } catch (error) {
         console.error(">>> postTiePage API 오류:", error);
@@ -523,15 +570,6 @@ select.form-control {
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 30px;
-}
-
-/* ------------------------------
-   매치 선택(25개) 래퍼
------------------------------- */
-.match-wrapper {
-  display: flex;
-  flex-direction: column; /* 세로로 행 나열 */
-  gap: 10px;
 }
 
 /* 각 행 안에 있는 5개 셀렉트들 */

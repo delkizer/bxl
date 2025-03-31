@@ -275,17 +275,18 @@ async def get_playerlist(
     result = team.get_player_list(team_code)
     return result
 
-@app.get("/api/tielist", tags=["Coder"])
+@app.get("/api/tiepage", tags=["Coder"])
 async def get_tielist(
         request: Request,
         tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
         tie_no: Optional[int] = Query(None, description="토너먼트에 해당하는 tie no"),
+        game_date: Optional[str] = Query(None, description="tie가 벌어지는 날자"),
 ):
     """
     :param request:
     :return: tai에 해당하는 팀과 정보 리스트 전체 전달
     """
-    result = None
+    result = coder.get_tie_page(tournament_uuid, tie_no, game_date)
     return result
 
 @app.post("/api/tiepage", tags=["Coder"])
@@ -298,4 +299,17 @@ async def get_tiepage(
     :return: 
     """
     result = coder.create_tie(tie_info)
+    return result
+
+@app.post("/api/tiemodify", tags=["Coder"])
+async def get_tiemodify(
+        request: Request,
+        tie_info: TieInfo,
+):
+    """
+    :param request:
+    :param tie_info:
+    :return:
+    """
+    result = coder.modify_tie(tie_info)
     return result
