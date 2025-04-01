@@ -1,29 +1,33 @@
 import { defineStore } from 'pinia';
 import apiClient from '@/services/apiClient.js';
+// router 인스턴스(혹은 useRouter 훅)를 가져옵니다.
+import router from '@/router'; // 예: '@/router/index.js'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,     // 유저 정보
+    user: null,
     isLoggedIn: false,
     isRefreshing: false,
     refreshTried: false,
   }),
   actions: {
     async login(email, password) {
-      const res = await apiClient.post('/api/login', { email, password });
-      if (res.status === 200) {
-        // user 정보를 /me API 등에서 재호출하거나, 응답 바디에 담아줄 수도 있음
-        this.isLoggedIn = true;
-        // this.user = ...
+      try {
+        const res = await apiClient.post('/api/login', { email, password });
+        if (res.status === 200) {
+          this.isLoggedIn = true;
+          // this.user = ...
+        }
+      } catch (err) {
+        // 에러 처리
+        console.error('login error:', err);
       }
-      // 에러 처리 등은 try-catch
     },
     async refreshTokens() {
       try {
         this.isRefreshing = true;
         const res = await apiClient.post('/api/refresh_token');
         if (res.status === 200) {
-          // 새 access_token, refresh_token 쿠키가 세팅되었을 것
           console.log('Token refreshed.');
           return true;
         }
@@ -38,6 +42,9 @@ export const useAuthStore = defineStore('auth', {
       this.isLoggedIn = false;
       this.user = null;
       this.refreshTried = false;
+
+      // 로그아웃 시점에도 바로 login으로 보내려면 아래 사용
+      // router.push('/login');
     },
     async fetchCurrentUser() {
       try {
@@ -45,28 +52,35 @@ export const useAuthStore = defineStore('auth', {
         this.user = res.data;
         this.isLoggedIn = true;
       } catch (err) {
-        // 401인 경우 → 만료 가능성. refresh 시도
+        // 토큰 만료나 인증 실패(401) 처리
         if (err.response && err.response.status === 401) {
-          // 이미 refresh 시도했거나, 현재 refresh 중이면 무한 루프 방지
+          // 이미 refresh를 시도했거나, 현재 refresh 중이면 무한 루프 방지
           if (this.refreshTried || this.isRefreshing) {
             console.log('Already tried refresh or is refreshing. Logging out...');
             this.logout();
+            // 로그아웃 후 로그인 화면으로 이동
+            if (router.currentRoute.value.path !== '/login' || router.currentRoute.value.path !== '/') {
+              router.push('/login');
+            }
           } else {
             console.log('Try refresh token...');
             this.refreshTried = true;
             const success = await this.refreshTokens();
             if (success) {
-              // refresh 성공 시 → 다시 시도
+              // refresh 성공 시 다시 시도
               console.log('Refresh success. Retry fetchCurrentUser...');
               await this.fetchCurrentUser();
             } else {
-              // refresh 실패 시 → 로그아웃
+              // refresh 실패 시 로그아웃 후 로그인화면 이동
               console.log('Refresh failed. Logging out...');
               this.logout();
+              if (router.currentRoute.value.path !== '/login' || router.currentRoute.value.path !== '/' ) {
+                router.push('/login');
+              }
             }
           }
         } else {
-          // 401 외 다른 오류 처리
+          // 401 외 다른 오류
           console.error('fetchCurrentUser error:', err);
         }
       }

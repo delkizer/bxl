@@ -46,7 +46,7 @@ app = FastAPI(
 # CORS를 허용할 도메인(혹은 포트) 목록
 origins = [
     "http://localhost:5173",
-    "http://52.78.144.236:8080"  # 새로 추가 (서버 IP + 포트)
+    "http://13.125.50.113:8080"  # 새로 추가 (서버 IP + 포트)
 
 ]
 
@@ -159,6 +159,7 @@ async def refresh_token(request: Request):
     사용자의 access 토큰을 재생성
     """
     refresh_token = request.cookies.get("refresh_token")
+    logger.info(f"{refresh_token}")
 
     if not refresh_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not provided")
