@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async refreshTokens() {
       // 서버가 /api/refresh 로 refresh_token을 검증 후 새 access_token 발급해준다고 가정
-      const res = await apiClient.post('/api/refresh');
+      const res = await apiClient.post('/api/refresh_token');
       // 200이면 쿠키가 갱신됨. user 정보나 응답을 확인할 수도 있음
     },
     async logout() {
