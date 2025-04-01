@@ -45,7 +45,9 @@ app = FastAPI(
 
 # CORS를 허용할 도메인(혹은 포트) 목록
 origins = [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://52.78.144.236:8080"  # 새로 추가 (서버 IP + 포트)
+
 ]
 
 app.add_middleware(
