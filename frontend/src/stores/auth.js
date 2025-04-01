@@ -57,10 +57,13 @@ export const useAuthStore = defineStore('auth', {
           // 이미 refresh를 시도했거나, 현재 refresh 중이면 무한 루프 방지
           if (this.refreshTried || this.isRefreshing) {
             console.log('Already tried refresh or is refreshing. Logging out...');
-            this.logout();
+            await this.logout();
             // 로그아웃 후 로그인 화면으로 이동
-            if (router.currentRoute.value.path !== '/login' || router.currentRoute.value.path !== '/') {
-              router.push('/login');
+            if (
+              router.currentRoute.value.name !== 'login' &&
+              router.currentRoute.value.name !== 'home'
+            ) {
+              await router.push('/login');
             }
           } else {
             console.log('Try refresh token...');
@@ -73,9 +76,12 @@ export const useAuthStore = defineStore('auth', {
             } else {
               // refresh 실패 시 로그아웃 후 로그인화면 이동
               console.log('Refresh failed. Logging out...');
-              this.logout();
-              if (router.currentRoute.value.path !== '/login' || router.currentRoute.value.path !== '/' ) {
-                router.push('/login');
+              await this.logout();
+              if (
+                router.currentRoute.value.name !== 'login' &&
+                router.currentRoute.value.name !== 'home'
+              ) {
+                await router.push({ name: 'login' });
               }
             }
           }

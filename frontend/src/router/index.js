@@ -16,7 +16,7 @@ import OfficialList  from "@/components/OfficialList.vue";
 import {useAuthStore} from "@/stores/auth";
 
 const routes = [
-  { path: '/', name: 'home', component: MainPage, meta: { requiresAuth: true } },
+  { path: '/', name: 'home', component: MainPage},
 
   { path: '/login', name: 'login', component: LoginPage },
 
@@ -36,6 +36,7 @@ const routes = [
   { path: '/tourpage/:uuid?', name: 'tourpage', component: TourPage, meta: { requiresAuth: true } },
 
   { path: '/officiallist', name: 'officiallist', component: OfficialList, meta: { requiresAuth: true } },
+
 ]
 
 const router = createRouter({
