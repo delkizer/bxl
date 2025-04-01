@@ -1,0 +1,14 @@
+[Unit]
+Description=FastAPI HTTP Server (bxl)
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/work/bxl
+ExecStart=/home/ubuntu/work/bxl/venv/bin/uvicorn main_http:app --host 0.0.0.0 --port 7001 --reload
+Restart=always
+RestartSec=3
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target
