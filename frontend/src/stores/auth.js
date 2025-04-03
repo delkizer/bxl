@@ -25,8 +25,11 @@ export const useAuthStore = defineStore('auth', {
     },
     async refreshTokens() {
       try {
-        this.isRefreshing = true;
-        const res = await apiClient.post('/api/refresh_token');
+        if (this.refreshTried) {
+          const res = await apiClient.post('/api/refresh_token');
+        } else {
+          this.logout()
+        }
         if (res.status === 200) {
           console.log('Token refreshed.');
           return true;
@@ -44,7 +47,7 @@ export const useAuthStore = defineStore('auth', {
       this.refreshTried = false;
 
       // 로그아웃 시점에도 바로 login으로 보내려면 아래 사용
-      // router.push('/login');
+      router.push('/login');
     },
     async fetchCurrentUser() {
       try {

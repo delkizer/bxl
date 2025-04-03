@@ -28,8 +28,12 @@
 </template>
 
 <script>
-import apiClient from "@/services/api.js";
-import { useAuthStore } from "@/stores/auth";
+import axios from 'axios'
+
+const apiClient = axios.create({
+  baseURL: 'https://bxl-dev.delkizer.com',  // 실제 API 서버 도메인/주소
+  withCredentials: true,
+})
 
 export default {
   name: 'LoginPage',
@@ -42,9 +46,14 @@ export default {
   methods: {
     async onLogin() {
       try {
-        const authStore = useAuthStore();
-        await authStore.login(this.username, this.password);
-        this.$router.push('/');
+        const res = await apiClient.post('/api/login', {
+          email: this.username,
+          password: this.password
+        })
+        if (res.status === 200) {
+          console.log('로그인 성공', res.data)
+          this.$router.push('/')
+        }
       } catch (error) {
         console.error(error);
         alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');

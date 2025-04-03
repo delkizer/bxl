@@ -16,7 +16,7 @@ import OfficialList  from "@/components/OfficialList.vue";
 import {useAuthStore} from "@/stores/auth";
 
 const routes = [
-  { path: '/', name: 'home', component: MainPage},
+  { path: '/', name: 'home', component: MainPage, meta: { requiresAuth: true } },
 
   { path: '/login', name: 'login', component: LoginPage },
 

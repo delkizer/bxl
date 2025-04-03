@@ -46,7 +46,8 @@ app = FastAPI(
 # CORS를 허용할 도메인(혹은 포트) 목록
 origins = [
     "http://localhost:5173",
-    "http://13.125.50.113:8080"  # 새로 추가 (서버 IP + 포트)
+    "http://13.125.50.113:8080",
+    "https://bxl-dev.delkizer.com"
 
 ]
 
@@ -93,8 +94,10 @@ async def user_login(user: UserLogin):
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=config.set_cookie_secret,  # HTTPS 환경이라면 True
-            samesite=config.set_cookie_samesite,
+            #secure=config.set_cookie_secret,  # HTTPS 환경이라면 True
+            #samesite=config.set_cookie_samesite,
+            secure=True,
+            samesite="none",
             path="/",
             max_age=60 * 60 * 24  # 1일 등 원하는 유효기간
         )
@@ -103,8 +106,10 @@ async def user_login(user: UserLogin):
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=config.set_cookie_secret,
-            samesite=config.set_cookie_samesite,
+            #secure=config.set_cookie_secret,
+            #samesite=config.set_cookie_samesite,
+            secure=True,
+            samesite="none",
             path="/",
             max_age=60 * 60 * 24 * 8
         )
@@ -159,7 +164,7 @@ async def refresh_token(request: Request):
     사용자의 access 토큰을 재생성
     """
     refresh_token = request.cookies.get("refresh_token")
-    logger.info(f"{refresh_token}")
+    logger.info(f"refresh_token:{refresh_token}")
 
     if not refresh_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not provided")
