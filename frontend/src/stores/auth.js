@@ -16,6 +16,8 @@ export const useAuthStore = defineStore('auth', {
         const res = await apiClient.get('/api/userinfo');
         this.user = res.data;
         this.isLoggedIn = true;
+        console.log (res.data)
+        return ;
 
       } catch (err) {
         if (err.response && err.response.status === 401) {
@@ -31,6 +33,8 @@ export const useAuthStore = defineStore('auth', {
             // 3) 아직 refresh 안 했다면 -> refreshTokens() 시도
             console.log('Try refresh token...');
             this.refreshTried = true;
+
+            return ;
 
             const success = await this.refreshTokens();
             if (success) {
