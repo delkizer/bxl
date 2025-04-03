@@ -47,19 +47,22 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  if (to.name !== 'login' && !authStore.isLoggedIn) {
-    try {
-      await authStore.fetchCurrentUser();
-    } catch (error) {
-      console.error(error);
-    }
+  if (to.name === 'login') {
+    return next();
   }
 
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
     return next('/login');
   }
 
-  return next();
+  try {
+    await authStore.fetchCurrentUser();
+  } catch (err) {
+    console.error(err);
+  }
+
+  next();
+
 });
 
 export default router
