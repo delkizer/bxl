@@ -11,48 +11,9 @@ export const useAuthStore = defineStore('auth', {
   }),
   actions: {
     async fetchCurrentUser() {
-      try {
-        // 1) 서버에 /api/userinfo 요청 (쿠키는 withCredentials 로 자동 전송)
         const res = await apiClient.get('/api/userinfo');
         this.user = res.data;
         this.isLoggedIn = true;
-        console.log (res.data)
-        return ;
-
-      } catch (err) {
-        if (err.response && err.response.status === 401) {
-          // 2) 만료 or 인증 안 됨
-          if (this.refreshTried || this.isRefreshing) {
-            // 이미 refresh 시도했으면 → 무한 루프 방지
-            console.log('Already tried refresh or is refreshing. Logging out...');
-            this.logout();
-            if (router.currentRoute.value.name !== 'login') {
-              router.push('/login');
-            }
-          } else {
-            // 3) 아직 refresh 안 했다면 -> refreshTokens() 시도
-            console.log('Try refresh token...');
-            this.refreshTried = true;
-
-            return ;
-
-            const success = await this.refreshTokens();
-            if (success) {
-              console.log('Refresh success. Retry fetchCurrentUser...');
-              await this.fetchCurrentUser();
-            } else {
-              console.log('Refresh failed. Logging out...');
-              this.logout();
-              if (router.currentRoute.value.name !== 'login') {
-                router.push('/login');
-              }
-            }
-          }
-        } else {
-          // 401 외 다른 오류
-          console.error('fetchCurrentUser error:', err);
-        }
-      }
     },
 
     async refreshTokens() {
