@@ -31,7 +31,7 @@
 import axios from 'axios'
 
 const apiClient = axios.create({
-  baseURL: 'https://bxl-dev.delkizer.com',  // 실제 API 서버 도메인/주소
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
 })
 

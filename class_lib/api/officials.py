@@ -5,9 +5,10 @@ from fastapi import HTTPException, status, Query
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 
-from class_lib.api.base_model import OfficialInfo, GameOfficialInfo
+from class_lib.api.base_model import OfficialInfo, GameOfficialInfo, OfficialSearch
 from class_config.class_db import ConfigDB
 from class_config.class_env import Config
+from class_lib.api.db_model import OfficialInfoModel
 from class_lib.local_utils import utils
 from define.define_code import DefineCode
 
@@ -41,11 +42,24 @@ class Officials:
         )
 
     def get_officials(self
-                      #, official_info: OfficialInfo
+                      , official_info: OfficialSearch
                       ):
         session = self.bxl_session_factory()
         try:
-            query = session.query(OfficialInfo)
+            query = session.query(OfficialInfoModel)
+            if official_info is not None:
+                if official_info.official_uuid is not None:
+                    query = query.filter(OfficialInfoModel.official_uuid == official_info.official_uuid)
+                if official_info.first_name:
+                    query = query.filter(OfficialInfoModel.first_name == official_info.first_name)
+                if official_info.family_name:
+                    query = query.filter(OfficialInfoModel.family_name == official_info.family_name)
+                if official_info.nickname:
+                    query = query.filter(OfficialInfoModel.nickname.ilike(f"{official_info.nickname}%"))
+                if official_info.gender:
+                    query = query.filter(OfficialInfoModel.gender == official_info.gender)
+                if official_info.nation_code:
+                    query = query.filter(OfficialInfoModel.nation_code == official_info.nation_code)
 
             result = query.all()
 

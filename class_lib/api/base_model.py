@@ -162,6 +162,23 @@ class OfficialInfo(BaseModel):
     gender: str = Field( ..., description="운영 요원의 성별 (예: M, F, Other 등)" )
     nation_code: str = Field(...,description="운영 요원의 3자리 국가 코드 (예: KOR, USA 등)")
 
+class OfficialSearch(BaseModel):
+    """
+    운영 요원(Official) 정보 구조
+
+    - `official_uuid`: 운영 요원의 고유 UUID (API 내부에서 자동으로 생성됨)
+    - `first_name`: 운영 요원의 이름 (예: 길동)
+    - `family_name`: 운영 요원의 성 (예: 홍)
+    - `nickname`: 운영 요원의 별칭
+    - `gender`: 운영 요원의 성별 (예: M, F, Other 등)
+    """
+    official_uuid: uuid.UUID = Field( default=None, description="운영 요원의 고유 UUID (API에서 자동 생성되며, 별도 입력 불필요)" )
+    first_name: str = Field( None, description="운영 요원의 이름 (예: 길동)" )
+    family_name: str = Field( None, description="운영 요원의 성 (예: 홍)" )
+    nickname: str = Field(None, description="운영 요원의 별칭 (필요 시 작성)" )
+    gender: str = Field( None, description="운영 요원의 성별 (예: M, F, Other 등)" )
+    nation_code: str = Field(None,description="운영 요원의 3자리 국가 코드 (예: KOR, USA 등)")
+
 
 class GameOfficialInfo(BaseModel):
     """

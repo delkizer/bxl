@@ -23,7 +23,7 @@ const routes = [
   { path: '/coder',  name: 'coder', component: CoderPage, meta: { requiresAuth: true } },
   { path: '/coderlist', name: 'coderlist', component: CoderList, meta: { requiresAuth: true } },
   { path: '/codertie', name: 'codertie', component: CoderTie, meta: { requiresAuth: true } },
-  { path: '/coderofficials', name: 'codertie', component: CoderOfficials, meta: { requiresAuth: true } },
+  { path: '/coderofficials', name: 'coderofficials', component: CoderOfficials, meta: { requiresAuth: true } },
 
   { path: '/scorer', name: 'scorer', component: ScorerPage, meta: { requiresAuth: true } },
 

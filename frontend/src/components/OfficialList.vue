@@ -34,13 +34,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="official in officialList.value" :key="official.official_uuid">
+        <tr v-for="official in officialList" :key="official.official_uuid">
           <td>
-            <!-- 각 행의 체크박스, selectedOfficials 배열로 관리 -->
             <input
               type="checkbox"
               :value="official.official_uuid"
-              v-model="selectedOfficials.value"
+              v-model="selectedOfficials"
             />
           </td>
           <td>{{ official.first_name }}</td>
@@ -56,7 +55,7 @@
     </table>
 
     <!-- (A) 여러 명 동시 추가 모달 -->
-    <div v-if="showMultiAddModal.value" class="modal">
+    <div v-if="showMultiAddModal.valueOf()" class="modal">
       <div class="modal-content">
         <h3>Add Multiple Officials</h3>
         <table class="multi-add-table">
@@ -66,20 +65,37 @@
               <th>Family Name</th>
               <th>Nickname</th>
               <th>Gender</th>
-              <th>Nation Code</th>
+              <th>Nation</th>
               <th>Remove</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="(row, idx) in newOfficials.value"
+              v-for="(row, idx) in newOfficials.values()"
               :key="idx"
             >
               <td><input type="text" v-model="row.first_name" /></td>
               <td><input type="text" v-model="row.family_name" /></td>
               <td><input type="text" v-model="row.nickname" /></td>
-              <td><input type="text" v-model="row.gender" /></td>
-              <td><input type="text" v-model="row.nation_code" /></td>
+              <td>
+                <select class="form-control" v-model="row.gender">
+                  <option value="">성별</option>
+                  <option value="000M">남</option>
+                  <option value="000W">여</option>
+                </select>
+              </td>
+              <td>
+                <select id="nation_code" class="form-control" v-model="nation_code">
+                  <option value="">국가</option>
+                  <option
+                    v-for="nation in nationList"
+                    :key="nation.code"
+                    :value="nation.code.trim()">
+                    {{nation.code_desc}}
+                  </option>
+                </select>
+
+              </td>
               <td>
                 <button class="btn" @click="removeNewOfficial(idx)">X</button>
               </td>
@@ -95,31 +111,44 @@
     </div>
 
     <!-- (B) 개별 수정 모달 -->
-    <div v-if="showEditModal.value" class="modal">
+    <div v-if="showEditModal.valueOf()" class="modal">
       <div class="modal-content">
         <h3>Edit Official</h3>
 
         <div class="form-row">
           <label>First Name</label>
-          <input type="text" v-model="editOfficial.value.first_name" />
+          <input type="text" v-model="editOfficial.first_name" />
         </div>
         <div class="form-row">
           <label>Family Name</label>
-          <input type="text" v-model="editOfficial.value.family_name" />
+          <input type="text" v-model="editOfficial.family_name" />
         </div>
         <div class="form-row">
           <label>Nickname</label>
-          <input type="text" v-model="editOfficial.value.nickname" />
+          <input type="text" v-model="editOfficial.nickname" />
         </div>
         <div class="form-row">
           <label>Gender</label>
-          <input type="text" v-model="editOfficial.value.gender" />
+          {{editOfficial.gender}}
+          <select v-model="editOfficial.gender">
+            <option value="">성별</option>
+            <option value="000M">남</option>
+            <option value="000W">여</option>
+          </select>
         </div>
         <div class="form-row">
           <label>Nation Code</label>
-          <input type="text" v-model="editOfficial.value.nation_code" />
+          <select v-model="editOfficial.nation_code">
+            <option value="">국가</option>
+            <option
+              v-for="nation in nationList"
+              :key="nation.code"
+              :value="nation.code.trim()"
+            >
+              {{ nation.code_desc }}
+            </option>
+          </select>
         </div>
-
         <div class="button-container">
           <button class="btn" @click="saveEdit">Save</button>
           <button class="btn" @click="cancelEdit">Cancel</button>
@@ -131,7 +160,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-// import officialApi from '@/api/officialApi' // 실제 API 모듈 (예시)
+import officialApi from '@/api/officialApi.js'
+import tourApi from '@/api/tourApi'
 
 // 1) Officials 목록 (테이블)
 const officialList = ref<any[]>([])
@@ -140,36 +170,29 @@ const officialList = ref<any[]>([])
 const selectedOfficials = ref<string[]>([])
 
 // 3) 다중 등록 모달 표시 여부 + 입력 데이터(newOfficials)
-const showMultiAddModal = ref(false)
+const showMultiAddModal = ref<boolean>(false)
 const newOfficials = ref<any[]>([]) // [{first_name:'', family_name:'', ...}, {...}]
 
 // 4) 개별 수정 모달 표시 여부 + editOfficial
 const showEditModal = ref(false)
 const editOfficial = ref<any>({
-  // structure: { official_uuid, first_name, family_name, nickname, gender, nation_code }
 })
 
+const nationList = ref<any[]>([])
+const nation_code = ref<any>()
+
 // ========== onMounted: 초기 로딩 예시 ==========
-onMounted(() => {
-  // 예시: 로컬 하드코딩 / 실제로는 API로 불러오기
-  officialList.value = [
-    {
-      official_uuid: '467ed60b-d159-41bd-be2a-37846101183e',
-      first_name: 'Иван',
-      family_name: 'Иванов',
-      nickname: 'Ваня',
-      gender: '000M',
-      nation_code: 'RUS'
-    },
-    {
-      official_uuid: '23efbf9d-b189-40f4-93cb-4fffd49a3592',
-      first_name: 'Anak Agung',
-      family_name: 'Putra',
-      nickname: 'Agung',
-      gender: '000M',
-      nation_code: 'IDN'
-    }
-  ]
+onMounted(async () => {
+  try{
+    const officialListRes = await officialApi.getOfficials()
+    officialList.value = officialListRes.data
+
+    const nationListRes = await tourApi.getNationList()
+    nationList.value = nationListRes.data
+
+  } catch ( error ) {
+    console.log('Failed to fetch officials:', error )
+  }
 })
 
 // ========== (A) 여러 명 동시 추가 메서드들 ==========
@@ -241,9 +264,7 @@ function deleteSelectedOfficials() {
 function toggleSelectAll(e: Event) {
   const checked = (e.target as HTMLInputElement).checked
   if (checked) {
-    // 전체 uuid를 selectedOfficials에 넣음
-    const allUuids = officialList.value.map(o => o.official_uuid)
-    selectedOfficials.value = allUuids
+    selectedOfficials.value = officialList.value.map(o => o.official_uuid)
   } else {
     // 해제
     selectedOfficials.value = []
@@ -285,10 +306,17 @@ function toggleSelectAll(e: Event) {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  table-layout: fixed;
 }
 .multi-add-table th, .multi-add-table td {
   border: 1px solid #ccc;
   padding: 6px 10px;
+  word-wrap: break-word;
+}
+
+.multi-add-table input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn {
@@ -317,7 +345,9 @@ function toggleSelectAll(e: Event) {
 }
 .modal-content {
   background-color: #fff;
-  width: 600px;
+  width: 750px;
+  max-height: 80vh;
+  overflow-y: auto;
   padding: 20px;
   border-radius: 6px;
 }

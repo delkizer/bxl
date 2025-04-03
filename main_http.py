@@ -12,7 +12,7 @@ from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 
 from class_lib.api.base_model import UserLogin, UserCreate, UserInfo, TourInfo, TeamAndPlayerInfo, TieInfo, \
-    OfficialInfo, GameOfficialInfo
+    OfficialInfo, GameOfficialInfo, OfficialSearch
 from class_lib.api.auth import Auth
 from class_lib.api.coder import Coder
 from class_lib.api.team import Team
@@ -327,14 +327,13 @@ async def get_tiemodify(
 @app.get("/api/officials", tags=["Officail"])
 async def get_officials(
         request: Request,
-        #official_info: OfficialInfo = Depends(officials.official_info_query),
+        official_info: Optional[OfficialSearch] = None,
 ):
     """
     :param request:
     :return:
     """
-    #official_info: OfficialInfo = OfficialInfo(  )
-    result = officials.get_officials(  )
+    result = officials.get_officials( official_info )
     return result
 
 @app.post("/api/officials", tags=["Official"])
