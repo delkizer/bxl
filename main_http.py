@@ -167,7 +167,7 @@ async def refresh_token(request: Request):
     logger.info(f"refresh_token:{refresh_token}")
 
     if not refresh_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not provided")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Refresh token not provided")
 
     try:
         payload = auth.verify_refresh_token(refresh_token)
