@@ -203,7 +203,6 @@ const router = useRouter()
 // ========== onMounted: 초기 로딩 예시 ==========
 onMounted(async () => {
   try{
-    console.log(import.meta.env.VITE_API_BASE_URL)
     const officialListRes = await officialApi.getOfficials()
     officialList.value = officialListRes.data
 
