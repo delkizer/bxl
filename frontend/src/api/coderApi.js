@@ -16,5 +16,8 @@ export default {
   },
   postTieModify(params = {}) {
     return apiClient.post('/api/tiemodify', params )
-  }
+  },
+  postGameOfficials(params = {}) {
+    return apiClient.post('/api/gameofficials', params )
+  },
 }

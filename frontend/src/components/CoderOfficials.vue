@@ -1,6 +1,6 @@
 <template>
   <div class="assign-official-page">
-    <!-- 상단: Tournament / Tie / Match / Game -->
+    <!-- 상단: Tournament / Tie / Match -->
     <div class="top-selector">
       <!-- Tournament -->
       <div class="selector-item">
@@ -8,7 +8,7 @@
         <select
           id="tournamentSelect"
           class="form-control"
-          v-model="selectedTournament"
+          v-model="selectedTournament" disabled
         >
           <option value="">-- Select Tournament --</option>
           <option
@@ -27,13 +27,13 @@
         <select
           id="tieSelect"
           class="form-control"
-          v-model="selectedTie"
+          v-model="selectedTie" disabled
         >
           <option value="">-- Select Tie --</option>
           <option
             v-for="tieNo in tieOptions"
             :key="tieNo"
-            :value="tieNo"
+            :value="tieNo.toString()"
           >
             Tie #{{ tieNo }}
           </option>
@@ -58,18 +58,9 @@
           </option>
         </select>
       </div>
-
-      <!-- Checkbox: "모든 Game에 적용" -->
-      <div class="selector-item checkbox-container">
-        <label>
-          <input
-            type="checkbox"
-            v-model="applyToAllGames"
-          />
-          Apply to all 5 games
-        </label>
-      </div>
-
+    </div>
+    <div class="top-selector">
+      <!-- 나머지: 체크박스 + Game Select -->
       <!-- Game Select (disabled if applyToAllGames = true) -->
       <div class="selector-item">
         <label for="gameSelect">Game</label>
@@ -90,8 +81,18 @@
           </option>
         </select>
       </div>
+      <!-- 체크박스 -->
+      <div class="selector-item checkbox-container">
+        <label>
+          <input type="checkbox" v-model="applyToAllGames"/>
+          Apply to all 5 games
+        </label>
+      </div>
+      <div class="selector-item checkbox-container">
+        <!-- clear 버튼 -->
+        <button class="btn-clear" @click="clearAssignments">Clear</button>
+      </div>
     </div>
-
     <!-- Officials Assignment -->
     <div
       class="official-assignment-container"
@@ -100,7 +101,7 @@
       <h2>
         Officials Assignment<br />
         <span v-if="applyToAllGames">(Apply to all 5 Games in Match {{ selectedMatch }})</span>
-        <span v-else>Match #{{ selectedMatch }}, Game #{{ selectedGame }}</span>
+        <span v-else>Match #{{ selectedMatch }}, Game #{{ selectedGameNo }}</span>
       </h2>
 
       <!-- Umpire, Service Judge, Line Judge (등) 테이블 -->
@@ -164,54 +165,110 @@
       class="action-buttons"
       v-if="selectedTournament && selectedTie && selectedMatch && (applyToAllGames || selectedGameUuid)"
     >
-      <button @click="saveAssignments" class="save-btn">Save</button>
-      <button @click="cancelAssignments" class="cancel-btn">Cancel</button>
+      <button @click="openSaveModal" class="save-btn">Save</button>
+      <button @click="openCancelModal" class="cancel-btn">Cancel</button>
     </div>
 
     <!-- Modal: Official 배정 -->
-    <div v-if="showAssignModal" class="modal">
-      <div class="modal-content">
-        <h3>Assign Official - {{ currentRole }}</h3>
-        <label>Select Official</label>
-        <select v-model="selectedOfficialUuid">
-          <option value="">-- Select --</option>
-          <option
-            v-for="off in officialList"
-            :key="off.official_uuid"
-            :value="off.official_uuid"
-          >
-            {{ off.first_name }} {{ off.family_name }}
-          </option>
-        </select>
-        <div class="button-container">
-          <button @click="confirmAssign">Confirm</button>
-          <button @click="closeModal">Close</button>
-        </div>
-      </div>
+<div v-if="showAssignModal" class="modal" @click.self="closeModal">
+  <div class="modal-content" @click.stop>
+    <h3>Assign Official - {{ currentRole }}</h3>
+    <!-- (A) Officials 표 -->
+    <div class="table-scroll-container">
+      <table class="official-list-table">
+        <thead>
+        <tr>
+          <th></th>
+          <th>First Name</th>
+          <th>Family Name</th>
+          <th>Nickname</th>
+          <th>Nation</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr
+          v-for="off in officialList"
+          :key="off.official_uuid"
+          @click="rowClick(off.official_uuid)"
+          :class="{
+            'selected-row': selectedOfficialUuid === off.official_uuid, 'assigned-row': isAssigned(off.official_uuid)
+          }"
+        >
+          <td>
+            <!-- 라디오 버튼 (name="officialSelect" 동일) -->
+            <input
+              type="radio"
+              name="officialSelect"
+              :value="off.official_uuid"
+              v-model="selectedOfficialUuid"
+              :disabled="isAssigned(off.official_uuid)"
+              @click.stop
+            />
+          </td>
+          <td>{{ off.first_name }}</td>
+          <td>{{ off.family_name }}</td>
+          <td>{{ off.nickname }}</td>
+          <td>{{ off.nation_code }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="button-container">
+      <button @click="closeModal">Close</button>
     </div>
   </div>
+</div>
+<!-- (A) 저장 확인 모달 -->
+<ConfirmationModal
+  :visible="showSaveConfirmModal"
+  title="저장 확인"
+  message="저장을 진행하시겠습니까?"
+  confirmButtonLabel="확인"
+  cancelButtonLabel="취소"
+  @confirm="handleSaveConfirm"
+  @cancel="handleSaveCancel"
+/>
+
+<ConfirmationModal
+  :visible="showCancelConfirmModal"
+  title="종료 확인"
+  message="메인으로 이동하시겠습니까?"
+  confirmButtonLabel="확인"
+  cancelButtonLabel="취소"
+  @confirm="handleCancelConfirm"
+  @cancel="handleCancelCancel"
+/>
+</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
+import { useRouter} from "vue-router";
+import { useCoderStore } from '@/stores/coder';
 import tourApi from '@/api/tourApi'
 import officialApi from '@/api/officialApi'
+import coderApi from '@/api/coderApi';
+import ConfirmationModal from "@/components/modal/Confirmation.vue";
+
+const router = useRouter()
+const coderStore = useCoderStore()
+
+const showSaveConfirmModal = ref(false)
+const showCancelConfirmModal = ref(false)
 
 /** 1) Tournament 목록 및 선택 **/
 const tournaments = ref<any[]>([])
 const selectedTournament = ref<string>('')
 
 /** 2) Tie / Match **/
-const tieInfo = ref<any[]>([])
+const selectedTie = ref<string>('')
 const tieOptions = ref<number[]>([])
-const matchOptions = ref<number[]>([])
-const selectedTie = ref('')
-const selectedMatch = ref('')
-const selectedGame = ref('')
 
-/** Game 목록 (API 호출 결과: game_no, game_uuid 배열) */
+const selectedMatch = ref<number | ''>('')
+const matchOptions = ref<number[]>([])
+
 const gameUuidList = ref<{ game_no: number; game_uuid: string }[]>([])
-const selectedGameUuid = ref<string>('')  // 개별 게임 선택 값
+const selectedGameUuid = ref<string>('')
 const applyToAllGames = ref<boolean>(false)
 
 /** 4) Official 배정 상태 **/
@@ -225,11 +282,7 @@ const lineJudgeSlots = ref<{official: any|null}[]>([
 ])
 
 /** 5) Official 목록 (실제 API 호출 가능) **/
-const officialList = ref<any[]>([
-  { official_uuid: '1111', first_name: 'Иван', family_name: '이바노프' },
-  { official_uuid: '2222', first_name: 'NUR', family_name: 'ZULAIKHA' },
-  { official_uuid: '3333', first_name: '홍',  family_name: '길동' },
-])
+const officialList = ref<any[]>([])
 
 /** 6) 모달 제어 **/
 const showAssignModal = ref(false)
@@ -237,37 +290,126 @@ const currentRole = ref('')
 const currentSlotIndex = ref<number|null>(null)
 const selectedOfficialUuid = ref('')
 
+const selectedGameNo = computed(() => {
+  // gameUuidList: [{ game_no, game_uuid }, ...]
+  const found = gameUuidList.value.find(g => g.game_uuid === selectedGameUuid.value)
+  return found ? found.game_no : ''
+})
+
+const assignedOfficialUuids = computed( () => {
+  const list: string[] = []
+
+  // 1) Umpire
+  if (umpireOfficial.value && umpireOfficial.value.official_uuid) {
+    list.push(umpireOfficial.value.official_uuid)
+  }
+
+  // 2) Service Judge
+  if (serviceJudgeOfficial.value && serviceJudgeOfficial.value.official_uuid) {
+    list.push(serviceJudgeOfficial.value.official_uuid)
+  }
+
+  // 3) Line Judge 4 slots
+  lineJudgeSlots.value.forEach(slot => {
+    if (slot.official && slot.official.official_uuid) {
+      list.push(slot.official.official_uuid)
+    }
+  })
+
+  return list
+})
+
 /** ========== onMounted: Tournament 목록 불러오기 ========== **/
 onMounted(async () => {
   try {
+    const officialRes = await officialApi.getOfficials()
+    officialList.value = officialRes.data
+
     const tourRes = await tourApi.getTourList()
-    tournaments.value = tourRes.data // [{ tournament_uuid, tournament_title, ... }]
+    tournaments.value = tourRes.data
+
+    if (coderStore.tournament_uuid) {
+      selectedTournament.value = coderStore.tournament_uuid
+    }
   } catch (error) {
     console.error("Failed to load tournaments:", error)
   }
 })
 
+watch(selectedTournament, async (newVal) => {
+  coderStore.tournament_uuid = newVal
+
+  tieOptions.value = []
+  selectedTie.value = ''
+  matchOptions.value = []
+  selectedMatch.value = ''
+  gameUuidList.value = []
+  selectedGameUuid.value = ''
+  applyToAllGames.value = false
+
+  if (!newVal) {
+    // 선택 취소됨
+    return
+  }
+
+  if (coderStore.tieNo) {
+    tieOptions.value = [ coderStore.tieNo ]  // 예: [2]
+  }
+
+  if (tieOptions.value.length > 0) {
+    selectedTie.value = String(tieOptions.value[0]) // ex) "2"
+  }
+
+})
+
 /** watch: tie -> matchOptions 업데이트 */
-watch(selectedTie, (newVal) => {
+watch(selectedTie, async (newVal) => {
   selectedMatch.value = ''
   matchOptions.value = []
   gameUuidList.value = []
   selectedGameUuid.value = ''
 
-  const found = tieInfo.value.find(item => item.tie_no === newVal)
-  if (found) {
-    matchOptions.value = found.match_no
+  if (!newVal) {
+    return
   }
+
+  const tieNoNum = Number(newVal)
+  const gameDate = coderStore.gameDate
+  try {
+    const resp = await coderApi.getTiePage({
+      tournament_uuid: selectedTournament.value,
+      tie_no: tieNoNum,
+      game_date: gameDate
+    })
+
+    const matchArr = resp.data.match_info?.map((m: any) => m.match_no) || []
+    matchOptions.value = matchArr
+
+    coderStore.setTieData(
+      selectedTournament.value,
+      tieNoNum,
+      resp.data.game_date  // 혹은 gameDate
+    )
+
+    if (matchOptions.value.length > 0) {
+      selectedMatch.value = matchOptions.value[0]
+    }
+
+  } catch (err) {
+    console.log('Failed to load tiepage:', err)
+  }
+
 })
 
 /** watch: match -> gameUuidList 업데이트 */
 watch(selectedMatch, async (newVal) => {
   selectedGameUuid.value = ''
   gameUuidList.value = []
+
   if (!selectedTournament.value || !selectedTie.value || !newVal) {
     return
   }
-  // API 호출: /api/gameuuids?tournament_uuid=xxx&tie_no=yyy&match_no=zzz
+
   try {
     const res = await officialApi.getGmaeuuids({
       tournament_uuid: selectedTournament.value,
@@ -280,54 +422,79 @@ watch(selectedMatch, async (newVal) => {
   }
 })
 
-/** ========== watch: selectedTournament 변경 시 ========== **/
-watch(selectedTournament, async (newVal) => {
-  // 초기화
-  tieInfo.value = []
-  tieOptions.value = []
-  matchOptions.value = []
-  selectedTie.value = ''
-  selectedMatch.value = ''
-  applyToAllGames.value = false
-  selectedGame.value = ''
-
-  if (!newVal) {
-    // 선택 취소됨
-    return
-  }
-
-  try {
-    // tournament_uuid를 params에 전달
-    const res = await officialApi.getGameTies({ tournament_uuid: newVal })
-    tieInfo.value = res.data.tie_info || []
-    tieOptions.value = tieInfo.value.map(t => t.tie_no)
-
-    // 첫 Tie 자동 선택 (옵션)
-    if (tieInfo.value.length > 0) {
-      const firstTie = tieInfo.value[0]
-      selectedTie.value = firstTie.tie_no
-      matchOptions.value = firstTie.match_no
-    }
-  } catch (err) {
-    console.error("Failed to load tie/match:", err)
-  }
-})
-
 /** ========== watch: applyToAllGames 변경 시 ========== **/
 watch(applyToAllGames, (newVal) => {
   if (newVal) {
     // 체크되면 Game Select를 disable => selectedGame 초기화
-    selectedGame.value = ''
+    selectedGameUuid.value = ''
   }
 })
 
-/** ========== 공식 메서드들 ========== **/
+function isAssigned(uuid: string) {
+  return assignedOfficialUuids.value.includes(uuid)
+}
+
+function openCancelModal() {
+  showCancelConfirmModal.value = true
+}
+
+async function handleCancelConfirm() {
+  showCancelConfirmModal.value = false
+  // 메인(/) 경로로 이동
+  router.push('/')
+}
+
+function handleCancelCancel() {
+  // 모달만 닫기
+  showCancelConfirmModal.value = false
+}
+
+function rowClick(uuid: string) {
+  if (isAssigned(uuid)) {
+    return
+  }
+
+  // radio 모델 세팅
+  selectedOfficialUuid.value = uuid
+
+  // confirmAssign() 로직 통합
+  const chosen = officialList.value.find(o => o.official_uuid === uuid)
+  if (!chosen) return
+
+  if (currentRole.value === 'UMPIRE') {
+    umpireOfficial.value = chosen
+  } else if (currentRole.value === 'SERVICE_JUDGE') {
+    serviceJudgeOfficial.value = chosen
+  } else if (currentRole.value === 'LINE_JUDGE' && currentSlotIndex.value !== null) {
+    lineJudgeSlots.value[currentSlotIndex.value].official = chosen
+  }
+
+  // 모달 닫기
+  closeModal()
+}
 
 function openAssignModal(role: string, slotIdx: number|null = null) {
   currentRole.value = role
   currentSlotIndex.value = slotIdx
   selectedOfficialUuid.value = ''
   showAssignModal.value = true
+}
+
+function clearAssignments() {
+  // 1) Umpire 해제
+  umpireOfficial.value = null
+
+  // 2) Service Judge 해제
+  serviceJudgeOfficial.value = null
+
+  // 3) Line Judges 해제
+  lineJudgeSlots.value.forEach(slot => {
+    slot.official = null
+  })
+
+  // Game Select/Checkbox
+  selectedGameUuid.value = ''
+  applyToAllGames.value = false
 }
 
 function closeModal() {
@@ -351,6 +518,19 @@ function confirmAssign() {
   closeModal()
 }
 
+function openSaveModal() {
+  if (!selectedTie.value || !selectedMatch.value) {
+    alert("Tie/Match is not selected.")
+    return
+  }
+  if (!applyToAllGames.value && !selectedGameUuid.value) {
+    alert("Select game or check 'Apply to all 5 games'.")
+    return
+  }
+
+  showSaveConfirmModal.value = true
+}
+
 function removeOfficial(role: string) {
   if (role === 'UMPIRE') {
     umpireOfficial.value = null
@@ -363,27 +543,90 @@ function removeLineJudge(idx: number) {
   lineJudgeSlots.value[idx].official = null
 }
 
-function saveAssignments() {
-  if (!selectedTie.value || !selectedMatch.value) {
-    alert("Tie/Match is not selected.")
-    return
-  }
-  if (!applyToAllGames.value && !selectedGame.value) {
-    alert("Select game or check 'Apply to all 5 games'.")
-    return
-  }
+async function handleSaveConfirm() {
+  showSaveConfirmModal.value = false // 모달 닫기
 
-  if (applyToAllGames.value) {
-    alert(`Saving all 5 games for Tie ${selectedTie.value}, Match ${selectedMatch.value}`)
-  } else {
-    alert(`Saving single game ${selectedGame.value} for Tie ${selectedTie.value}, Match ${selectedMatch.value}`)
+  // 실제 API 호출 로직
+  try {
+    if (!selectedTie.value || !selectedMatch.value) {
+      alert("Tie/Match is not selected.")
+      return
+    }
+    if (!applyToAllGames.value && !selectedGameUuid.value) {
+      alert("Select game or check 'Apply to all 5 games'.")
+      return
+    }
+
+    let targetGames: string[] = []
+    if (applyToAllGames.value) {
+      // 모든 gameUuidList
+      targetGames = gameUuidList.value.map(g => g.game_uuid)
+    } else {
+      // 단일 selectedGameUuid
+      if (selectedGameUuid.value) {
+        targetGames = [ selectedGameUuid.value ]
+      }
+    }
+
+    const payload: Array<{ game_uuid: string; official_uuid: string; official_role: string }> = []
+    if (umpireOfficial.value && umpireOfficial.value.official_uuid) {
+      for (const gUuid of targetGames) {
+        payload.push({
+          game_uuid: gUuid,
+          official_uuid: umpireOfficial.value.official_uuid,
+          official_role: 'UMPIRE'
+        })
+      }
+    }
+
+    if (serviceJudgeOfficial.value && serviceJudgeOfficial.value.official_uuid) {
+      for (const gUuid of targetGames) {
+        payload.push({
+          game_uuid: gUuid,
+          official_uuid: serviceJudgeOfficial.value.official_uuid,
+          official_role: 'SERVICE_JUDGE'
+        })
+      }
+    }
+
+    lineJudgeSlots.value.forEach((slot, idx) => {
+      if (slot.official && slot.official.official_uuid) {
+        for (const gUuid of targetGames) {
+          payload.push({
+            game_uuid: gUuid,
+            official_uuid: slot.official.official_uuid,
+            official_role: 'LINE_JUDGE'
+          })
+        }
+      }
+    })
+
+    if (payload.length === 0) {
+      alert("No officials assigned to save.")
+      return
+    }
+
+    console.log("Saving gameOfficials payload:", payload)
+    const response = await coderApi.postGameOfficials(payload)
+    // 응답 처리
+    console.log("Save success:", response.data)
+
+    alert("Officials saved successfully!")
+
+  } catch (error) {
+    console.error('Failed to save', error)
+    // 실패 처리
   }
-  // 실제 API 호출 로직 작성
+}
+
+function handleSaveCancel() {
+  showSaveConfirmModal.value = false
 }
 
 function cancelAssignments() {
   alert("Cancelled")
 }
+
 </script>
 
 <style scoped>
@@ -475,5 +718,51 @@ function cancelAssignments() {
   justify-content: flex-end;
   margin-top: 10px;
   gap: 10px;
+}
+
+.official-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.official-list-table th, .official-list-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.table-scroll-container {
+  max-height: 400px;
+  overflow-y: auto;
+  display: block;
+}
+
+.official-list-table tbody tr:hover {
+  background-color: #f5f5f5;
+  cursor: pointer;   /* 포인터 커서 */
+}
+
+.selected-row {
+  background-color: #d9edf7; /* 하늘색 등 */
+}
+
+.assigned-row {
+  background-color: #eee;
+  color: #888;
+  cursor: not-allowed;
+}
+.assigned-row:hover {
+  background-color: #eee; /* 호버해도 변하지 않도록 */
+}
+
+.btn-clear {
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f2f2f2;
+}
+.btn-clear:hover {
+  background-color: #ddd;
 }
 </style>
