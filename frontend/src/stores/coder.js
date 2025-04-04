@@ -12,7 +12,7 @@ export const useCoderStore = defineStore('coderStore', {
     strategies: [
       {
         key:'coder-stroe',
-        storage: localStorage
+        storage : localStorage
       }
     ]
   },

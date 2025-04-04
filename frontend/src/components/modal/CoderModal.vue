@@ -9,8 +9,13 @@
           {{ confirmButtonLabel }}
         </button>
         <!-- 가운데 수정 버튼 -->
-        <button class="modal-btn" @click="$emit('update')">
-          {{ updateButtonLabel }}
+        <button class="modal-btn" @click="$emit('player')">
+          {{ PlayerButtonLabel }}
+        </button>
+      </div>
+      <div class="modal-button-container">
+        <button class="modal-btn" @click="$emit('official')">
+          {{ OfficialButtonLabel }}
         </button>
         <!-- 취소 버튼 -->
         <button class="modal-btn" @click="$emit('cancel')">
@@ -38,13 +43,17 @@ export default {
       type: String,
       default: "CODER"
     },
-    updateButtonLabel: {
+    PlayerButtonLabel: {
       type: String,
-      default: "수정"
+      default: "PLAYER"
+    },
+    OfficialButtonLabel: {
+      type: String,
+      default: "OFFICIAL"
     },
     cancelButtonLabel: {
       type: String,
-      default: "취소"
+      default: "CANCEL"
     }
   }
 };
@@ -77,8 +86,10 @@ export default {
 }
 .modal-button-container {
   display: flex; justify-content: space-evenly;
+  margin: 10px;
 }
 .modal-btn {
+  width: 120px;
   padding: 10px 20px;
   background-color: white;
   color: #333;

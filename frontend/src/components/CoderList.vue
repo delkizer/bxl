@@ -47,10 +47,12 @@
   title="TIE 상세정보 확인"
   :message="modalMessage"
   confirmButtonLabel="CODER"
-  updateButtonLabel="MODIFY"
+  PlayerButtonLabel="PLAYER"
+  OfficialButtonLabel="OFFICIAL"
   cancelButtonLabel="CANCEL"
   @confirm="onConfirmSelectTie"
-  @update="onUpdateSelectTie"
+  @official="onOfficialSelectTie"
+  @player="onPlayerSelectTie"
   @cancel="onCancelSelectTie"
   />
 
@@ -143,8 +145,15 @@ export default {
       this.showModal = false;
       this.$router.push({ name: 'coder' });
     },
-    onUpdateSelectTie() {
-      // 수정 로직
+    onOfficialSelectTie() {
+      const coderStore = useCoderStore();
+      coderStore.setTieData(
+        this.selectedTie.tournament_uuid, this.selectedTie.tie_no, this.selectedTie.game_date,);
+      this.showModal = false;
+      this.$router.push('/coderofficials');
+
+    },
+    onPlayerSelectTie() {
       const coderStore = useCoderStore();
       coderStore.setTieData(
         this.selectedTie.tournament_uuid, this.selectedTie.tie_no, this.selectedTie.game_date,);

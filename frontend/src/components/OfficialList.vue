@@ -85,7 +85,7 @@
                 </select>
               </td>
               <td>
-                <select id="nation_code" class="form-control" v-model="nation_code">
+                <select class="form-control" v-model="row.nation_code">
                   <option value="">국가</option>
                   <option
                     v-for="nation in nationList"
@@ -155,13 +155,31 @@
         </div>
       </div>
     </div>
+    <!-- 새로운 저장/종료 버튼 -->
+    <div class="button-container">
+      <button class="btn btn-cancel" @click="handleCancel">종료</button>
+    </div>
+
+    <!-- 종료 모달 -->
+    <ConfirmationModal
+      :visible="showExitModal"
+      title="종료 확인"
+      message="Home으로 이동하시겠습니까?"
+      confirmButtonLabel="확인"
+      cancelButtonLabel="취소"
+      @confirm="handleExitConfirm"
+      @cancel="handleExitCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from "vue-router";
 import officialApi from '@/api/officialApi.js'
 import tourApi from '@/api/tourApi'
+
+import ConfirmationModal from "@/components/modal/Confirmation.vue";
 
 // 1) Officials 목록 (테이블)
 const officialList = ref<any[]>([])
@@ -179,7 +197,8 @@ const editOfficial = ref<any>({
 })
 
 const nationList = ref<any[]>([])
-const nation_code = ref<any>()
+const showExitModal = ref(false)
+const router = useRouter()
 
 // ========== onMounted: 초기 로딩 예시 ==========
 onMounted(async () => {
@@ -210,16 +229,18 @@ function removeNewOfficial(idx: number) {
   newOfficials.value.splice(idx, 1)
 }
 
-function confirmMultiAdd() {
-  // 실제로는 API 호출 (POST /api/officials)으로 newOfficials.value 배열을 전달
-  // officialApi.postOfficials(newOfficials.value).then(...)
+async function confirmMultiAdd() {
+  try {
+    const postOfficialRes = await officialApi.postOfficials(newOfficials.value)
+    console.log('Officials Added : ', postOfficialRes.data)
 
-  // 예시로 localList에 추가
-  officialList.value.push(...newOfficials.value.map(item => ({
-    official_uuid: crypto.randomUUID(),
-    ...item
-  })))
-  closeMultiAddModal()
+    const getOfficialRes = await officialApi.getOfficials()
+    officialList.value = getOfficialRes.data
+
+    closeMultiAddModal()
+  } catch ( error ) {
+    console.error('Failed to add newe officials: ', error)
+  }
 }
 
 function closeMultiAddModal() {
@@ -235,14 +256,16 @@ function openEditModal(official: any) {
   editOfficial.value = { ...official }
 }
 
-function saveEdit() {
-  // 실제로는 officialApi.putOfficial(editOfficial.value)
-  // localList에서 해당 uuid 찾아 업데이트
-  const idx = officialList.value.findIndex(o => o.official_uuid === editOfficial.value.official_uuid)
-  if (idx !== -1) {
-    officialList.value[idx] = { ...editOfficial.value }
+async function saveEdit() {
+  try {
+    const payload = [ editOfficial.value ]
+    await officialApi.putOfficials( payload )
+    const getOfficialsRes = await officialApi.getOfficials()
+    officialList.value = getOfficialsRes.data
+    cancelEdit()
+  } catch( error ) {
+    console.error('Failed to update official:', error)
   }
-  cancelEdit()
 }
 
 function cancelEdit() {
@@ -251,13 +274,29 @@ function cancelEdit() {
 }
 
 // ========== (C) 다중 삭제 메서드 ==========
-function deleteSelectedOfficials() {
-  // 실제로는 officialApi.deleteOfficials(selectedOfficials.value)
-  // localList에서 해당 uuid들 제거
-  officialList.value = officialList.value.filter(
-    o => !selectedOfficials.value.includes(o.official_uuid)
-  )
-  selectedOfficials.value = []
+async function deleteSelectedOfficials() {
+  try {
+    const payload = selectedOfficials.value.map(uuid => {
+      const official = officialList.value.find( o => o.official_uuid === uuid )
+      return {
+        official_uuid: uuid,
+        first_name: official?.first_name,
+        family_name: official?.family_name,
+        nickname: official?.nickname,
+        gender: official?.gender,
+        nation_code: official?.nation_code
+      }
+    })
+
+    console.log(payload)
+    await officialApi.deleteOfficials(payload)
+
+    const getOfficialsRes = await officialApi.getOfficials()
+    officialList.value = getOfficialsRes.data
+    selectedOfficials.value = []
+  } catch( error ) {
+    console.error('Failed to delete officials:', error)
+  }
 }
 
 // ========== (D) 전체 선택 체크박스 ==========
@@ -270,6 +309,21 @@ function toggleSelectAll(e: Event) {
     selectedOfficials.value = []
   }
 }
+
+function handleCancel() {
+  // "종료" 버튼 클릭 → "종료 확인" 모달 열기
+  showExitModal.value = true
+}
+
+function handleExitConfirm() {
+  showExitModal.value = false
+  router.push('/')
+}
+
+function handleExitCancel() {
+  showExitModal.value = false
+}
+
 </script>
 
 <style scoped>
