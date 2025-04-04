@@ -8,7 +8,7 @@ export default {
     return apiClient.get(`/api/gameuuids/`, {params})
   },
   getOfficials(params = {}) {
-    return apiClient.get(`/api/officials/`, {params})
+    return apiClient.get(`/api/officials`, {params})
   },
   putOfficials(params = {}) {
     return apiClient.put(`/api/officials`, params)
