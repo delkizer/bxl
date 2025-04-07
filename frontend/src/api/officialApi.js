@@ -21,4 +21,8 @@ export default {
       data: params
     })
   },
+  getGameOfficial(params = {}) {
+    return apiClient.get('/api/gameofficials', {params})
+
+  },
 }

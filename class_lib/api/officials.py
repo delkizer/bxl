@@ -84,6 +84,38 @@ class Officials:
             session.close()
 
 
+    def get_gameofficials(self, tournament_uuid: uuid.UUID, tie_no: int, match_no: int, game_uuid: uuid.UUID):
+        session = self.bxl_session_factory()
+        try:
+            query = text("""
+                SELECT A.game_no, B.game_uuid, B.official_uuid, B.official_role, C.first_name, C.family_name
+                  FROM bxl.game_info A 
+                INNER JOIN bxl.game_official_info B ON A.game_uuid = B.game_uuid
+                INNER JOIN bxl.official_info C ON B.official_uuid = C.official_uuid
+                WHERE A.tournament_uuid = :tournament_uuid
+                  AND A.tie_no = :tie_no AND A.match_no = :match_no
+                  AND A.game_uuid = :game_uuid
+                ORDER BY A.game_no 
+             """)
+            result = session.execute(query, {
+                'tournament_uuid': tournament_uuid,
+                'tie_no': tie_no,
+                'match_no': match_no,
+                'game_uuid': game_uuid,
+            }).mappings().all()
+
+            return result
+        except HTTPException as http_exc:
+            # HTTPException을 그대로 재전달
+            raise http_exc
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"User creation failed: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        finally:
+            session.close()
+
 
     def get_gameties(self, tournament_uuid):
         session = self.bxl_session_factory()
@@ -323,6 +355,28 @@ class Officials:
     def post_gameofficial(self, game_official_list: List[GameOfficialInfo]):
         session = self.bxl_session_factory()
         try:
+            # DELETE 쿼리 준비
+            delete_query = text("""
+                                DELETE
+                                FROM bxl.game_official_info
+                                WHERE game_uuid = :game_uuid
+                                  AND official_role IN :role_list
+                                """)
+
+            code_query = text("""
+                SELECT code_desc FROM bxl.code_info WHERE code_group = 'OFFICIAL_ROLE'
+            """)
+            rows = session.execute(code_query).fetchall()
+            role_list = [r[0] for r in rows]
+
+            for official_data in game_official_list:
+                params = {
+                    'game_uuid': str(official_data.game_uuid),
+                    'role_list': tuple(role_list)  # IN 절에는 tuple을 넘겨주어야 함
+                }
+
+                session.execute(delete_query, params)
+
             # INSERT 쿼리 준비
             insert_query = text("""
                                 INSERT INTO bxl.game_official_info
@@ -330,69 +384,28 @@ class Officials:
                                 VALUES (:game_uuid, :official_uuid, :official_role)
                                 """)
 
-            # 여러 GameOfficialInfo 객체를 순회하면서 삽입
+            # 각 GameOfficialInfo 객체에 대해 삭제 후 삽입 처리
             for official_data in game_official_list:
-                params = {
+                # 새 레코드 삽입
+                insert_params = {
                     "game_uuid": str(official_data.game_uuid),
                     "official_uuid": str(official_data.official_uuid),
                     "official_role": official_data.official_role,
                 }
-                session.execute(insert_query, params)
+                session.execute(insert_query, insert_params)
 
             session.commit()
-            return {"msg": "GameOfficials created successfully"}
+            return {"msg": "GameOfficials upserted successfully"}
 
         except IntegrityError as e:
             session.rollback()
             error_msg = str(e.orig).lower()
-            self.logger.error(f"GameOfficial creation failed: {e}^{error_msg}")
-            # 실제 제약 이름에 따라 조건 처리 (예: 중복 PK 등)
+            self.logger.error(f"GameOfficial upsert failed: {e}^{error_msg}")
             raise HTTPException(status_code=400, detail="중복 제약 위반 또는 무결성 오류 발생")
 
         except Exception as e:
             session.rollback()
-            self.logger.error(f"GameOfficial creation failed: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
-
-        finally:
-            session.close()
-
-    def put_gameofficials(self, game_official_list: List[GameOfficialInfo]):
-        session = self.bxl_session_factory()
-        try:
-            # UPDATE 쿼리 준비
-            update_query = text("""
-                                UPDATE bxl.game_official_info
-                                SET official_role = :official_role
-                                WHERE game_uuid = :game_uuid
-                                  AND official_uuid = :official_uuid
-                                """)
-
-            for official_data in game_official_list:
-                # 필수 식별자 체크
-                if not official_data.game_uuid or not official_data.official_uuid:
-                    raise HTTPException(status_code=400, detail="game_uuid and official_uuid are required for update.")
-
-                params = {
-                    "game_uuid": str(official_data.game_uuid),
-                    "official_uuid": str(official_data.official_uuid),
-                    "official_role": official_data.official_role,
-                }
-                session.execute(update_query, params)
-
-            session.commit()
-            return {"msg": "GameOfficials updated successfully"}
-
-        except IntegrityError as e:
-            session.rollback()
-            error_msg = str(e.orig).lower()
-            self.logger.error(f"GameOfficial update failed: {e}^{error_msg}")
-            # 실제 제약 이름, 무결성 에러를 확인 후 적절히 처리
-            raise HTTPException(status_code=400, detail="무결성 제약 또는 중복 키 에러")
-
-        except Exception as e:
-            session.rollback()
-            self.logger.error(f"GameOfficial update failed: {e}")
+            self.logger.error(f"GameOfficial upsert failed: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
 
         finally:

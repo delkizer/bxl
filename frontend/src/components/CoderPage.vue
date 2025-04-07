@@ -1,506 +1,317 @@
 <template>
-  <div class="coder-container">
-    <!-- 흰색 사각형 박스 -->
-    <div class="scoreboard-box">
-      <!-- 상단: "WARM UP" / "2:00" -->
-      <div class="warmup-info">
-        <h2>WARM UP</h2>
-        <div class="time">{{ warmUpDisplay }}</div>
-      </div>
-
-      <!-- 팀명, 점수 배치 -->
-      <div class="teams-row">
-        <!-- 왼쪽 팀 -->
-        <div class="team1">
-          <div>Team 1</div>
-          <div>Hurricanes</div>
+  <!-- 전체를 감싸는 래퍼 (필요시) -->
+  <div>
+    <!-- 1) scoreboard 영역 -->
+    <div class="scoreboard">
+      <div class="warmup-header">
+        <!-- 상단: WARM UP / 시간 -->
+        <div class="warmup-row">
+          <span class="warmup-title">WARM UP</span>
+          <span class="warmup-time">{{ formattedWarmUpTime }}</span>
         </div>
-
-        <!-- 점수 -->
-        <div class="score-display">
-          <span class="team1-score">0</span>
-          <span class="dash">-</span>
-          <span class="team2-score">0</span>
-        </div>
-
-        <!-- 오른쪽 팀 -->
-        <div class="team2">
-          <div>Team 2</div>
-          <div>Rockets</div>
+        <!-- 팀명 / 점수 -->
+        <div class="teams-row">
+          <span class="team-name">{{ teamA.name }}</span>
+          <span class="score">{{ teamA.score }} - {{ teamB.score }}</span>
+          <span class="team-name">{{ teamB.name }}</span>
         </div>
       </div>
     </div>
-    <!-- 하단 버튼 3개 -->
-    <div class="clock-buttons-row">
-      <!-- Warm Up Clock 버튼도 동적 시간 표기 -->
-      <div class="clock-button">
-        Warm Up Clock <br />
-        {{ warmUpDisplay }}
-      </div>
-      <div class="clock-button">
-        Match Clock <br />
-        10:00
-      </div>
-      <div class="clock-button">
-        Break Clock <br />
-        1:00
-      </div>
-    </div>
 
-    <!-- 하단 영역 수정된 구조 -->
-    <div class="bottom-container">
-      <!-- 왼쪽 박스 (Hurricanes +1/-1 등) -->
-      <div class="bottom-side-box">
-        <div class="bottom-label-box left-box">
-          <div>Hurricanes Score</div>
-          <div class="btn">+1</div>
-          <div class="btn">-1</div>
-          <div class="wins-box">
-            <span>Wins : 0</span>
-            <div class="spinner-buttons">
-              <button class="arrow-btn" @click="incrementWins">▲</button>
-              <button class="arrow-btn" @click="decrementWins">▼</button>
-            </div>
-          </div>
+    <!-- 2) 별도의 라벨 영역 -->
+    <div class="label-section">
+      <div class="label-row">
+        <div class="clock-box">
+          <p class="clock-title">Warm Up Clock</p>
+          <p>{{ formattedWarmUpTime }}</p>
+        </div>
+        <div class="clock-box">
+          <p>Match Clock</p>
+          <p>{{ formattedMatchTime }}</p>
+        </div>
+        <div class="clock-box">
+          <p>Break Clock</p>
+          <p>{{ formattedBreakTime }}</p>
         </div>
       </div>
-
-      <!-- 중앙 요소들 컨테이너 -->
-      <div class="bottom-center-content">
-        <!-- Reset Score 버튼 -->
-        <div class="bottom-label-box center-box">
-          Reset Score
+      <!-- 중앙에 Reset Score 박스/버튼 -->
+      <div class="reset-row">
+        <div class="reset-box" @click="resetScore">Reset Score</div>
+      </div>
+      <!-- Warm Up Clock Setting 영역 -->
+      <div class="warmup-clock-setting-row">
+        <div class="warmup-clock-setting-col">
+          <div class="warmup-clock-adjust-box">+1</div>
+          <div class="warmup-clock-adjust-box">+5</div>
+          <div class="warmup-clock-adjust-box">+10</div>
         </div>
-
-        <!-- 새로운 레이아웃 구조 -->
-        <div class="clock-setting-container">
-          <!-- 왼쪽 +버튼 컬럼 -->
-          <div class="side-buttons-col plus-buttons">
-            <button @click="changeWarmUpTime(1)">+1</button>
-            <button @click="changeWarmUpTime(5)">+5</button>
-            <button @click="changeWarmUpTime(10)">+10</button>
-          </div>
-
-          <!-- 중앙 라벨 -->
-          <div class="bottom-label-box warmup-setting-label">
+        <!-- 중앙 영역을 감싸는 컨테이너 추가 -->
+        <div class="warmup-clock-setting-center">
+          <div class="warmup-clock-setting-box">
             Warm Up Clock Setting
           </div>
-
-          <!-- 오른쪽 -버튼 컬럼 -->
-          <div class="side-buttons-col minus-buttons">
-            <button @click="changeWarmUpTime(-1)">-1</button>
-            <button @click="changeWarmUpTime(-5)">-5</button>
-            <button @click="changeWarmUpTime(-10)">-10</button>
+          <!-- START, RESET 버튼을 중앙 영역 아래에 배치 -->
+          <div class="warmup-control-row">
+            <div class="warmup-control-box" @click="startWarmUp">START</div>
+            <div class="warmup-control-box" @click="resetWarmUpClock">RESET</div>
           </div>
         </div>
-
-        <!-- Start/Reset 버튼 행 -->
-        <div class="start-reset-row">
-          <button>Start</button>
-          <button @click="resetWarmUpTime">Reset</button>
-        </div>
-        <!-- 하단 게임 번호 라벨 행 -->
-        <div class="game-labels-row">
-          <div class="game-label">Gm<br>1</div>
-          <div class="game-label">Gm<br>2</div>
-          <div class="game-label">Gm<br>3</div>
-          <div class="game-label">Gm<br>4</div>
-          <div class="game-label">SD</div>
-          <div class="game-label">SS</div>
+        <div class="warmup-clock-setting-col">
+          <div class="warmup-clock-adjust-box">+1</div>
+          <div class="warmup-clock-adjust-box">+5</div>
+          <div class="warmup-clock-adjust-box">+10</div>
         </div>
       </div>
-
-      <!-- 오른쪽 박스 (Rockets +1/-1 등) -->
-      <div class="bottom-side-box">
-        <div class="bottom-label-box right-box">
-          <div>Rockets Score</div>
-          <div class="btn">+1</div>
-          <div class="btn">-1</div>
-          <div class="wins-box">
-            <span>Wins: 0</span>
-            <div class="spinner-buttons">
-              <button class="arrow-btn" @click="incrementWins">▲</button>
-              <button class="arrow-btn" @click="decrementWins">▼</button>
-            </div>
-          </div>
+      <div>
+        <!-- 추가: 6개 라벨 (가로 배치) -->
+        <div class="extra-label-row">
+          <div class="extra-label-box">Gm 1</div>
+          <div class="extra-label-box">Gm 2</div>
+          <div class="extra-label-box">Gm 3</div>
+          <div class="extra-label-box">Gm 4</div>
+          <div class="extra-label-box">SD</div>
+          <div class="extra-label-box">SS</div>
         </div>
-      </div>
-    </div>
-
-    <div class="additional-buttons-row">
-      <div class="function-label">
-        Next Match
-      </div>
-      <div class="function-label">
-        Result
+        <!-- 새로 추가: Next Match / Result 라벨 행 -->
+        <div class="extra-label-row">
+          <div class="warmup-control-box extra-label-control">Next Match</div>
+          <div class="warmup-control-box extra-label-control">RESULT</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import {useCoderStore} from "@/stores/coder.js";
-
 export default {
-  name: "CoderPage", // 공식 프로젝트 이름
+  name: "ScoreboardAndLabels",
   data() {
     return {
+      // 예시: 2분, 10분, 1분
       warmUpTime: 120,
-      warmUpDefaultTime: 120,
-      socket: null,
-      serverMessage: "",
-    }
+      matchTime: 600,
+      breakTime: 60,
+      teamA: {
+        name: "Hurricanes",
+        score: 0,
+      },
+      teamB: {
+        name: "Rockets",
+        score: 0,
+      },
+    };
   },
   computed: {
-    // 120초 → "2:00" 형태로 변환하기 위한 계산 속성
-    warmUpDisplay() {
-      // mm:ss 형태로 포매팅
-      const minutes = Math.floor(this.warmUpTime / 60);
-      const seconds = this.warmUpTime % 60;
-      // 두 자리로 맞춰주기
-      const secString = seconds < 10 ? "0" + seconds : seconds;
-      return `${minutes}:${secString}`;
-    }
-  },
-  mounted() {
-    this.initWebSocket();
-    const coderStore = useCoderStore();
-    const tieNo = coderStore.tieNo;
-    const gameDate = coderStore.gameDate;
-    const wsUrl = `${import.meta.env.VITE_WEBSOCKET_URL}/${gameDate}/${tieNo}`
-    this.socket = new WebSocket(wsUrl);
-
-
+    formattedWarmUpTime() {
+      return this.formatTime(this.warmUpTime);
+    },
+    formattedMatchTime() {
+      return this.formatTime(this.matchTime);
+    },
+    formattedBreakTime() {
+      return this.formatTime(this.breakTime);
+    },
   },
   methods: {
-    initWebSocket() {
-      this.socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
-      this.socket.onopen = () => {
-        console.log("WebSocket connected");
-        // 테스트 메시지
-        this.socket.send("Hello from Vue!");
-      };
-
-      this.socket.onmessage = (event) => {
-        //console.log("Message from server:", event.data);
-        this.serverMessage = event;
-      };
-
-      this.socket.onerror = (err) => {
-        console.error("WebSocket error:", err);
-      };
-
-      this.socket.onclose = (evt) => {
-        console.log("WebSocket closed", evt);
-      };
+    // 초 -> "mm:ss" 변환
+    formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return `${m}:${s}`;
     },
-    // Warm Up Clock 시간을 변경(+/-)하는 메서드
-    changeWarmUpTime(amount) {
-      this.warmUpTime += amount;
-      // 만약 0초 아래로 내려가지 않게 하려면 아래와 같이 처리
-      if (this.warmUpTime < 0) {
-        this.warmUpTime = 0;
-      }
+    // 시작 및 리셋 관련 메서드 (예시)
+    startWarmUp() {
+      // 워밍업 시작 로직
     },
-    resetWarmUpTime() {
-      this.warmUpTime = this.warmUpDefaultTime;
+    resetWarmUpClock() {
+      // 워밍업 리셋 로직
+    },
+    resetScore() {
+      this.teamA.score = 0;
+      this.teamB.score = 0;
     },
   },
 };
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
+/* 1) scoreboard 스타일 */
+.scoreboard {
+  background-color: #ffffff;
+  color: #181818;
+  padding: 1rem;
+  margin-top: 10px;
 }
 
-/* 부모 컨테이너 (파란 배경) */
-.coder-container {
-  position: absolute; /* or fixed */
-  top: 0;
-  left: 0;
-  width: 800px;
-  padding: 20px;
-  background-color: #4a7ab7;
-  color: #000; /* 기본 글자색 */
-  font-family: "Arial", sans-serif;
-}
-
-/* 흰색 사각형 박스 */
-.scoreboard-box {
-  background-color: #fff;
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  padding: 6px; /* 여백 통일 */
-  width: 100%;
+.warmup-header {
   text-align: center;
-  margin-bottom: 10px; /* 아래 요소와 간격 */
 }
 
-/* "WARM UP" / "2:00" 영역 */
-.warmup-info {
-  margin-bottom: 5px;
+.warmup-row {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
 }
-
-.warmup-info h2 {
-  margin-bottom: 2px;
-  font-size: 1.2rem;
+.warmup-title {
+  margin-right: 1rem;
+  font-weight: bold;
+  letter-spacing: -0.02em;
 }
-
-.warmup-info .time {
-  font-size: 1rem;
+.warmup-time {
+  font-weight: bold;
 }
 
 .teams-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 auto 0px auto;
-}
-
-/* 왼쪽, 오른쪽 팀 영역 */
-.team1, .team2 {
-  width: 25%;
-  text-align: center;
-  font-size: 1rem;
-}
-
-/* 점수 영역 */
-.score-display {
-  display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 10px;
+  gap: 1rem;
+  font-size: 1rem;
+  margin-top: 0.5rem;
 }
-
-.team1-score, .team2-score {
-  font-size: 1.3rem;
+.team-name {
   font-weight: bold;
 }
-
-.dash {
-  font-size: 1.5rem;
+.score {
+  padding: 0 1rem;
 }
 
-/* 하단 버튼 3개 영역 */
-.clock-buttons-row {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 5px;
-  margin-bottom: 20px; /* 아래 요소와 간격 추가 */
-}
-
-/* 버튼(또는 작은 박스) 스타일 */
-.clock-button {
-  background-color: #fff;
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  width: 150px;
-  padding: 10px;
+/* 2) label-section 스타일 */
+.label-section {
+  margin-top: 1rem;
   text-align: center;
-  font-size: 1rem;
-  line-height: 1.4;
 }
 
-/* 하단 컨테이너 레이아웃 수정 */
-.bottom-container {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
+.label-row {
+  display: inline-flex;
+  gap: 2rem;
 }
 
-/* 왼쪽/오른쪽 컨테이너 */
-.bottom-side-box {
-  width: 120px; /* 고정 너비 설정 */
-}
-
-/* 중앙 요소 컨테이너 */
-.bottom-center-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* 중앙 정렬 */
-  gap: 2px; /* 요소 간 간격 축소 */
-}
-
-/* 공통 스타일: 하얀 박스 형태 */
-.bottom-label-box {
+.clock-box {
   background-color: #fff;
-  border: 2px solid #2b4d75;
+  color: #181818;
+  border: 1px solid #181818;
   border-radius: 4px;
-  padding: 10px;
   width: 120px;
   text-align: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
 }
 
-/* 공통 버튼 스타일 ( +1, -1, 화살표 등 ) */
-.btn, .arrow-btn {
-  background: none;
-  border: 2px solid #2b4d75;
+.clock-box p {
+  margin: 0.1rem 0;
+}
+
+.clock-box .clock-title {
+  letter-spacing: -0.02em;
+}
+
+/* Reset Score 중앙 배치 */
+.reset-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.reset-box {
+  background-color: #fff;
+  color: #181818;
+  border: 1px solid #181818;
   border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
   cursor: pointer;
-  margin-top: 5px;
 }
 
-/* Wins 박스 */
-.wins-box {
-  background-color: #fff;
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  padding: 10px;
-  width: 80px;
-  text-align: center;
-  box-sizing: border-box;
-  margin: 5px auto 0 auto; /* (top right bottom left) */
-}
-
-/* 스핀 버튼들(▲, ▼) 세로 배치 */
-.spinner-buttons {
+/* Warm Up Clock Setting 전체 영역 */
+.warmup-clock-setting-row {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-/* Warm Up Clock Setting 섹션 */
-.warmup-setting-row {
-  text-align: center;   /* 가로 중앙 정렬 */
-  margin-top: 5px;      /* 상단 여백 추가 */
-}
-
-/* 상단 큰 라벨 박스 */
-.warmup-setting-label {
-  display: inline-block;
-  background-color: #fff;
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  padding: 10px 20px;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-  min-width: 200px;
-  text-align: center;
-}
-
-/* 사이드 버튼 컬럼 공통 스타일 */
-.side-buttons-col {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 80px;
-}
-
-/* 중앙 영역: Start/Reset 버튼 */
-.center-buttons-area {
-  display: flex;
-  flex-direction: column;
-  width: calc(100% - 180px);
-}
-
-/* 중앙 버튼들: Start/Reset */
-.center-large-buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-}
-
-.center-large-buttons button {
-  width: calc(50% - 10px);
-  height: 75px;
-  font-size: 1.2rem !important;
-}
-
-/* 게임 번호 라벨 행 */
-.game-labels-row {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 600px;
-  margin: 15px auto 0;
-  gap: 10px;
-}
-
-/* 게임 라벨 스타일 */
-.game-label {
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  background-color: #fff;
-  font-size: 0.9rem;
-  padding: 5px;
-  text-align: center;
-  width: calc(100% / 6 - 10px);
-  height: 60px;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  line-height: 1.3;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
-/* 공통 버튼 스타일 */
-.new-layout-container button {
-  width: 80px;   /* 버튼 폭 증가 */
-  height: 40px;  /* 버튼 높이 */
-  background-color: #fff;
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-/* 추가 버튼 행 스타일 */
-.additional-buttons-row {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-/* 기능 라벨 스타일 */
-.function-label {
-  background-color: #fff;
-  border: 2px solid #2b4d75;
-  border-radius: 4px;
-  padding: 10px 20px;
-  font-size: 1rem;
-  text-align: center;
-  min-width: 120px;
-}
-
-/* 시계 설정 컨테이너 */
-.clock-setting-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 650px;
-  margin: 0 auto 0px;
-}
-
-/* 사이드 버튼 컬럼 */
-.side-buttons-col {
+/* 왼쪽/오른쪽 조절 버튼 */
+.warmup-clock-setting-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 80px;
+  gap: 0.5rem;
 }
 
-/* Start/Reset 행 */
-.start-reset-row {
+.warmup-clock-adjust-box {
+  background-color: #fff;
+  color: #181818;
+  border: 1px solid #181818;
+  border-radius: 4px;
+  padding: 0.2rem;
+  font-weight: bold;
+  text-align: center;
+  width: 60px;
+  cursor: pointer;
+}
+
+/* 중앙 영역: Warm Up Clock Setting과 START/RESET 버튼을 감싸는 컨테이너 */
+.warmup-clock-setting-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 중앙의 Warm Up Clock Setting 박스 */
+.warmup-clock-setting-box {
+  background-color: #fff;
+  color: #181818;
+  border: 1px solid #181818;
+  border-radius: 4px;
+  padding: 0.2rem;
+  font-weight: bold;
+  text-align: center;
+  width: 200px;
+}
+
+/* START, RESET 컨트롤 행 (수평 배치) */
+.warmup-control-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* START, RESET 버튼 스타일 */
+.warmup-control-box {
+  background-color: #fff;
+  color: #181818;
+  border: 1px solid #181818;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
+
+.extra-label-row {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-bottom: 00px;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
-.start-reset-row button {
-  width: 100px;
-  height: 40px;
-  font-size: 1.0rem;
+.extra-label-box {
   background-color: #fff;
-  border: 2px solid #2b4d75;
+  color: #181818;
+  border: 1px solid #181818;
   border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  width: 55px;
+}
+
+.extra-label-control {
+  width: 100px;  /* 원하는 폭으로 조정 (예: 100px) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;  /* 볼드체 유지 */
 }
 </style>

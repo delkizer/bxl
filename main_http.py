@@ -389,19 +389,6 @@ async def post_gameofficials(
     result = officials.post_gameofficial(gameofficial_info)
     return result
 
-@app.put("/api/gameofficials", tags=["Official"])
-async def put_gameofficials(
-        request: Request,
-        gameofficial_info: List[GameOfficialInfo],
-):
-    """
-    :param request:
-    :param gameofficial_info:
-    :return:
-    """
-    result = officials.put_gameofficials(gameofficial_info)
-    return result
-
 @app.delete("/api/gameofficials", tags=["Official"])
 async def delete_gameofficials(
         request: Request,
@@ -443,4 +430,16 @@ async def get_gameties(
     :return:
     """
     result = officials.get_gameties(tournament_uuid)
+    return result
+
+@app.get("/api/gameofficials", tags=["Official"])
+async def get_gameofficials(
+        request: Request,
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+        tie_no: Optional[int] = Query(None, description="토너먼트에 해당하는 tie no"),
+        match_no: Optional[int] = Query(None, description="토너먼트에 해당하는 match no"),
+        game_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트에 match 당 해당하는 game no"),
+):
+
+    result = officials.get_gameofficials(tournament_uuid, tie_no, match_no, game_uuid)
     return result

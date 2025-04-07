@@ -362,6 +362,36 @@ watch(selectedTournament, async (newVal) => {
 
 })
 
+watch(selectedGameUuid, async (newVal) => {
+  // applyToAllGames가 체크되어 있으면, 단일 게임 조회를 안 할 수도 있음
+  if (applyToAllGames.value) {
+    // 전체 게임에 대한 일괄 적용 모드면, 굳이 단일 게임 배정을 볼 필요 없다고 판단할 수도.
+    // 필요에 따라 로직 추가/수정.
+    return
+  }
+  // gameUuid가 없으면(빈 값일 경우) 화면에서 할당 상태를 초기화
+  if (!newVal) {
+    clearAssignments()
+    return
+  }
+
+  try {
+    // API 파라미터 준비
+    const params = {
+      tournament_uuid: selectedTournament.value,
+      tie_no: Number(selectedTie.value), // tie_no가 문자열이면 Number 변환
+      match_no: selectedMatch.value,
+      game_uuid: newVal
+    }
+
+    const resp = await officialApi.getGameOfficial(params)
+    console.log(resp.data)
+    setOfficialsFromResponse(resp.data)
+  } catch (error) {
+    console.error('Failed to fetch game officials:', error)
+  }
+}),
+
 /** watch: tie -> matchOptions 업데이트 */
 watch(selectedTie, async (newVal) => {
   selectedMatch.value = ''
@@ -417,6 +447,11 @@ watch(selectedMatch, async (newVal) => {
       match_no: newVal
     })
     gameUuidList.value = res.data.game_uuids
+    if (gameUuidList.value.length > 0) {
+      selectedGameUuid.value = gameUuidList.value[0].game_uuid
+    }
+    await fetchAssignedOfficials(gameUuidList.value[0].game_uuid)
+
   } catch (err) {
     console.error("Failed to load gameUuids:", err)
   }
@@ -429,6 +464,49 @@ watch(applyToAllGames, (newVal) => {
     selectedGameUuid.value = ''
   }
 })
+
+async function fetchAssignedOfficials(gameUuid: string ) {
+  if(!gameUuid) return
+
+  try {
+    const resp = await officialApi.getGameOfficial({
+      tournament_uuid: selectedTournament.value,
+      tie_no:  String(selectedTie.value),
+      match_no: String(selectedMatch.value),
+      game_uuid: gameUuid
+    })
+    setOfficialsFromResponse(resp.data)
+  } catch (error) {
+    console.error('Failed to fetch assigned officials:', error)
+  }
+}
+
+function setOfficialsFromResponse(assignedList) {
+   // 1) 화면 상태 초기화
+   umpireOfficial.value = null
+   serviceJudgeOfficial.value = null
+   lineJudgeSlots.value = [
+     { official: null },
+     { official: null },
+     { official: null },
+     { official: null },
+   ]
+
+   // 2) assignedList 순회하며 role별로 분기
+   assignedList.forEach((item) => {
+     if (item.official_role === 'UMPIRE') {
+       umpireOfficial.value = item
+     } else if (item.official_role === 'SERVICE_JUDGE') {
+       serviceJudgeOfficial.value = item
+     } else if (item.official_role === 'LINE_JUDGE') {
+       // 선심이 여러 명일 수 있으므로, 빈 슬롯을 찾아 차례로 할당
+       const emptySlot = lineJudgeSlots.value.find(slot => slot.official === null)
+       if (emptySlot) {
+         emptySlot.official = item
+       }
+     }
+   })
+}
 
 function isAssigned(uuid: string) {
   return assignedOfficialUuids.value.includes(uuid)
