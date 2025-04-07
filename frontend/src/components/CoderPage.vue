@@ -40,10 +40,41 @@
       </div>
       <!-- Warm Up Clock Setting 영역 -->
       <div class="warmup-clock-setting-row">
+        <div class="win-tracker">
+          <div class="win-tracker-team">{{ teamA.name }}</div>
+
+          <!-- 여기서 badminton-stats를 사용 -->
+          <div class="win-tracker-row badminton-stats">
+            <!-- POINT 칸 -->
+            <div class="stats-box">
+              <span class="tracker-label">POINT</span>
+              <div class="arrow-button" @click="incrementWins('A')"><span class="arrow-up"></span></div>
+              <span class="tracker-value">{{ teamA.point }}</span>
+              <div class="arrow-button" @click="decrementWins('A')"><span class="arrow-down"></span></div>
+            </div>
+
+            <!-- GAME 칸 -->
+            <div class="stats-box">
+              <span class="tracker-label">GAME</span>
+              <div class="arrow-button" @click="incrementGame('A')"><span class="arrow-up"></span></div>
+              <span class="tracker-value">{{ teamA.game }}</span>
+              <div class="arrow-button" @click="decrementGame('A')"><span class="arrow-down"></span></div>
+            </div>
+
+            <!-- SCORE 칸 -->
+            <div class="stats-box">
+              <span class="tracker-label">SCORE</span>
+              <div class="arrow-button" @click="incrementScore('A')"><span class="arrow-up"></span></div>
+              <span class="tracker-value">{{ teamA.score }}</span>
+              <div class="arrow-button" @click="decrementScore('A')"><span class="arrow-down"></span></div>
+            </div>
+
+          </div>
+        </div>
         <div class="warmup-clock-setting-col">
-          <div class="warmup-clock-adjust-box">+1</div>
-          <div class="warmup-clock-adjust-box">+5</div>
-          <div class="warmup-clock-adjust-box">+10</div>
+          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(1)">+1</div>
+          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(5)">+5</div>
+          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(10)">+10</div>
         </div>
         <!-- 중앙 영역을 감싸는 컨테이너 추가 -->
         <div class="warmup-clock-setting-center">
@@ -57,9 +88,55 @@
           </div>
         </div>
         <div class="warmup-clock-setting-col">
-          <div class="warmup-clock-adjust-box">+1</div>
-          <div class="warmup-clock-adjust-box">+5</div>
-          <div class="warmup-clock-adjust-box">+10</div>
+          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(-1)">-1</div>
+          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(-5)">-5</div>
+          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(-10)">-10</div>
+        </div>
+        <div class="win-tracker">
+          <div class="win-tracker-team">
+            {{ teamB.name }}
+          </div>
+          <!-- 예: 3개 칸(Score/Game/Point)을 가로로 나열 -->
+          <div class="win-tracker-row badminton-stats">
+            <!-- 1) SCORE 칸 -->
+            <div class="stats-box">
+              <span class="tracker-label">SCORE</span>
+              <!-- 위쪽 화살표(증가) -->
+              <div class="arrow-button" @click="incrementScore('B')">
+                <span class="arrow-up"></span>
+              </div>
+              <!-- 현재 스코어 값 (예: teamB.score) -->
+              <span class="tracker-value">{{ teamB.score }}</span>
+              <!-- 아래쪽 화살표(감소) -->
+              <div class="arrow-button" @click="decrementScore('B')">
+                <span class="arrow-down"></span>
+              </div>
+            </div>
+
+            <!-- 2) GAME 칸 -->
+            <div class="stats-box">
+              <span class="tracker-label">GAME</span>
+              <div class="arrow-button" @click="incrementGame('B')">
+                <span class="arrow-up"></span>
+              </div>
+              <span class="tracker-value">{{ teamB.game }}</span>
+              <div class="arrow-button" @click="decrementGame('B')">
+                <span class="arrow-down"></span>
+              </div>
+            </div>
+
+            <!-- 3) POINT 칸 -->
+            <div class="stats-box">
+              <span class="tracker-label">POINT</span>
+              <div class="arrow-button" @click="incrementWins('B')">
+                <span class="arrow-up"></span>
+              </div>
+              <span class="tracker-value">{{ teamB.point }}</span>
+              <div class="arrow-button" @click="decrementWins('B')">
+                <span class="arrow-down"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div>
@@ -94,10 +171,14 @@ export default {
       teamA: {
         name: "Hurricanes",
         score: 0,
+        game: 0,
+        point: 0,
       },
       teamB: {
         name: "Rockets",
         score: 0,
+        game: 0,
+        point: 0,
       },
     };
   },
@@ -129,6 +210,9 @@ export default {
     resetScore() {
       this.teamA.score = 0;
       this.teamB.score = 0;
+    },
+    adjustWarmUp(sec) {
+      this.warmUpTime += sec;
     },
   },
 };
@@ -314,4 +398,113 @@ export default {
   align-items: center;
   font-weight: bold;  /* 볼드체 유지 */
 }
+
+/* win-tracker 컨테이너 */
+.win-tracker {
+  margin-top: 0.5rem;
+  text-align: center;
+  /* 필요시 배경/테두리 추가 */
+  background-color: #fff;
+  /*
+  border: 1px solid #181818;
+   */
+  border-radius: 4px;
+}
+
+/* 팀명 */
+.win-tracker-team {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+/* -1/+1 버튼 가로 배치 */
+.win-tracker-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem; /* POINT와 WINS 영역 사이의 간격 */
+}
+
+/* 라벨: POINT, WINS 텍스트 */
+.tracker-label {
+  font-weight: bold;
+  /* 필요 시 폰트크기 조정 */
+}
+
+/* 점수/승수 값 */
+.tracker-value {
+  font-weight: bold;
+  padding: 0 0.5rem;
+  /* 원하면 배경색/테두리 추가 가능 */
+}
+
+.win-tracker-wins label {
+  font-weight: bold;
+}
+
+.win-tracker-wins input[type="number"] {
+  width: 60px;
+  text-align: center;
+}
+
+/* 버튼 컨테이너: 폭 좁은 사각형, 흰 바탕 + 검은 테두리 */
+.arrow-button {
+  width: 24px;
+  height: 24px;
+  background-color: #fff;
+  border: 1px solid #000;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0.2rem 0; /* 화살표들 사이의 간격 */
+}
+
+/* 위쪽 삼각형 */
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid #000; /* 검은색 삼각형 */
+}
+
+/* 아래쪽 삼각형 */
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #000; /* 검은색 삼각형 */
+}
+
+/* 가로 배치하되, 각 칸(stats-box)은 세로 스택 */
+.win-tracker-row.badminton-stats {
+  display: flex;
+  justify-content: center; /* 좌우 가운데 정렬 (원하는 대로 조정) */
+  gap: 1rem;               /* 칸 사이 간격 */
+  flex-direction: row;
+}
+
+/* 한 칸(Score/Game/Point)을 세로로 쌓는 박스 */
+.stats-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70px;           /* 폭을 줄이면 전체 가로폭이 줄어듦 */
+  padding: 0.3rem 0;     /* 위아래 여백 */
+  border: 1px solid #ddd;/* 필요하면 테두리 or 배경색 */
+  border-radius: 6px;
+}
+
+/* 라벨 (SCORE / GAME / POINT) */
+.tracker-label {
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+
+
+
 </style>
