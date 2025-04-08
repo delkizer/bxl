@@ -7,13 +7,13 @@
         <!-- 상단: WARM UP / 시간 -->
         <div class="warmup-row">
           <span class="warmup-title">WARM UP</span>
-          <span class="warmup-time">{{ formattedWarmUpTime }}</span>
+          <span class="warmup-time">{{ coderStore.formattedWarmUpTime }}</span>
         </div>
         <!-- 팀명 / 점수 -->
         <div class="teams-row">
-          <span class="team-name">{{ teamA.name }}</span>
-          <span class="score">{{ teamA.score }} - {{ teamB.score }}</span>
-          <span class="team-name">{{ teamB.name }}</span>
+          <span class="team-name">{{ coderStore.teamA.name }}</span>
+          <span class="score">{{ coderStore.teamA.score }} - {{ coderStore.teamB.score }}</span>
+          <span class="team-name">{{ coderStore.teamB.name }}</span>
         </div>
       </div>
     </div>
@@ -23,78 +23,79 @@
       <div class="label-row">
         <div class="clock-box">
           <p class="clock-title">Warm Up Clock</p>
-          <p>{{ formattedWarmUpTime }}</p>
+          <p>{{ coderStore.formattedWarmUpTime }}</p>
         </div>
         <div class="clock-box">
           <p>Match Clock</p>
-          <p>{{ formattedMatchTime }}</p>
+          <p>{{ coderStore.formattedMatchTime }}</p>
         </div>
         <div class="clock-box">
           <p>Break Clock</p>
-          <p>{{ formattedBreakTime }}</p>
+          <p>{{ coderStore.formattedBreakTime }}</p>
         </div>
       </div>
       <!-- 중앙에 Reset Score 박스/버튼 -->
       <div class="reset-row">
-        <div class="reset-box" @click="resetScore">Reset Score</div>
+        <div class="reset-box" @click="coderStore.resetScore">Reset Score</div>
       </div>
       <!-- Warm Up Clock Setting 영역 -->
       <div class="warmup-clock-setting-row">
         <div class="win-tracker">
-          <div class="win-tracker-team">{{ teamA.name }}</div>
+          <div class="win-tracker-team">{{ coderStore.teamA.name }}</div>
 
           <!-- 여기서 badminton-stats를 사용 -->
           <div class="win-tracker-row badminton-stats">
             <!-- POINT 칸 -->
             <div class="stats-box">
               <span class="tracker-label">POINT</span>
-              <div class="arrow-button" @click="incrementWins('A')"><span class="arrow-up"></span></div>
-              <span class="tracker-value">{{ teamA.point }}</span>
-              <div class="arrow-button" @click="decrementWins('A')"><span class="arrow-down"></span></div>
+              <div class="arrow-button" @click="coderStore.incrementPoint('A')"><span class="arrow-up"></span></div>
+              <span class="tracker-value">{{ coderStore.teamA.point }}</span>
+              <div class="arrow-button" @click="coderStore.decrementPoint('A')"><span class="arrow-down"></span></div>
             </div>
 
             <!-- GAME 칸 -->
             <div class="stats-box">
               <span class="tracker-label">GAME</span>
-              <div class="arrow-button" @click="incrementGame('A')"><span class="arrow-up"></span></div>
-              <span class="tracker-value">{{ teamA.game }}</span>
-              <div class="arrow-button" @click="decrementGame('A')"><span class="arrow-down"></span></div>
+              <div class="arrow-button" @click="coderStore.incrementGame('A')"><span class="arrow-up"></span></div>
+              <span class="tracker-value">{{ coderStore.teamA.game }}</span>
+              <div class="arrow-button" @click="coderStore.decrementGame('A')"><span class="arrow-down"></span></div>
             </div>
 
             <!-- SCORE 칸 -->
             <div class="stats-box">
               <span class="tracker-label">SCORE</span>
-              <div class="arrow-button" @click="incrementScore('A')"><span class="arrow-up"></span></div>
-              <span class="tracker-value">{{ teamA.score }}</span>
-              <div class="arrow-button" @click="decrementScore('A')"><span class="arrow-down"></span></div>
+              <div class="arrow-button" @click="coderStore.incrementScore('A')"><span class="arrow-up"></span></div>
+              <span class="tracker-value">{{ coderStore.teamA.score }}</span>
+              <div class="arrow-button" @click="coderStore.decrementScore('A')"><span class="arrow-down"></span></div>
             </div>
 
           </div>
         </div>
         <div class="warmup-clock-setting-col">
-          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(1)">+1</div>
-          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(5)">+5</div>
-          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(10)">+10</div>
+          <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(1)">+1</div>
+          <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(5)">+5</div>
+          <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(10)">+10</div>
         </div>
         <!-- 중앙 영역을 감싸는 컨테이너 추가 -->
         <div class="warmup-clock-setting-center">
-          <div class="warmup-clock-setting-box">
-            Warm Up Clock Setting
+          <div class="warmup-clock-setting-box" @click="coderStore.cycleTimeTarget">
+            {{ coderStore.currentTargetLabel}}
           </div>
           <!-- START, RESET 버튼을 중앙 영역 아래에 배치 -->
           <div class="warmup-control-row">
-            <div class="warmup-control-box" @click="startWarmUp">START</div>
-            <div class="warmup-control-box" @click="resetWarmUpClock">RESET</div>
+            <button class="warmup-control-box" @click="coderStore.startWarmUp" :disabled="coderStore.isWarmUpRunning">START</button>
+            <button class="warmup-control-box" @click="coderStore.stopWarmUp" v-if="coderStore.isWarmUpRunning">PAUSE</button>
+            <button class="warmup-control-box" @click="onResetClick" :disabled="coderStore.isWarmUpRunning"> RESET</button>
           </div>
         </div>
         <div class="warmup-clock-setting-col">
-          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(-1)">-1</div>
-          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(-5)">-5</div>
-          <div class="warmup-clock-adjust-box" @click="adjustWarmUp(-10)">-10</div>
+          <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(-1)">-1</div>
+          <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(-5)">-5</div>
+          <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(-10)">-10</div>
         </div>
         <div class="win-tracker">
           <div class="win-tracker-team">
-            {{ teamB.name }}
+            {{ coderStore.teamB.name }}
           </div>
           <!-- 예: 3개 칸(Score/Game/Point)을 가로로 나열 -->
           <div class="win-tracker-row badminton-stats">
@@ -102,13 +103,13 @@
             <div class="stats-box">
               <span class="tracker-label">SCORE</span>
               <!-- 위쪽 화살표(증가) -->
-              <div class="arrow-button" @click="incrementScore('B')">
+              <div class="arrow-button" @click="coderStore.incrementScore('B')">
                 <span class="arrow-up"></span>
               </div>
               <!-- 현재 스코어 값 (예: teamB.score) -->
-              <span class="tracker-value">{{ teamB.score }}</span>
+              <span class="tracker-value">{{ coderStore.teamB.score }}</span>
               <!-- 아래쪽 화살표(감소) -->
-              <div class="arrow-button" @click="decrementScore('B')">
+              <div class="arrow-button" @click="coderStore.decrementScore('B')">
                 <span class="arrow-down"></span>
               </div>
             </div>
@@ -116,11 +117,11 @@
             <!-- 2) GAME 칸 -->
             <div class="stats-box">
               <span class="tracker-label">GAME</span>
-              <div class="arrow-button" @click="incrementGame('B')">
+              <div class="arrow-button" @click="coderStore.incrementGame('B')">
                 <span class="arrow-up"></span>
               </div>
-              <span class="tracker-value">{{ teamB.game }}</span>
-              <div class="arrow-button" @click="decrementGame('B')">
+              <span class="tracker-value">{{ coderStore.teamB.game }}</span>
+              <div class="arrow-button" @click="coderStore.decrementGame('B')">
                 <span class="arrow-down"></span>
               </div>
             </div>
@@ -128,11 +129,11 @@
             <!-- 3) POINT 칸 -->
             <div class="stats-box">
               <span class="tracker-label">POINT</span>
-              <div class="arrow-button" @click="incrementWins('B')">
+              <div class="arrow-button" @click="coderStore.incrementPoint('B')">
                 <span class="arrow-up"></span>
               </div>
-              <span class="tracker-value">{{ teamB.point }}</span>
-              <div class="arrow-button" @click="decrementWins('B')">
+              <span class="tracker-value">{{ coderStore.teamB.point }}</span>
+              <div class="arrow-button" @click="coderStore.decrementPoint('B')">
                 <span class="arrow-down"></span>
               </div>
             </div>
@@ -160,62 +161,41 @@
 </template>
 
 <script>
+import { useCoderStore } from "@/stores/coder.js";
+
 export default {
-  name: "ScoreboardAndLabels",
-  data() {
-    return {
-      // 예시: 2분, 10분, 1분
-      warmUpTime: 120,
-      matchTime: 600,
-      breakTime: 60,
-      teamA: {
-        name: "Hurricanes",
-        score: 0,
-        game: 0,
-        point: 0,
-      },
-      teamB: {
-        name: "Rockets",
-        score: 0,
-        game: 0,
-        point: 0,
-      },
-    };
+  name: "CoderPage",
+  mounted() {
+    const coderStore = useCoderStore()
+
+    // tieData가 아직 없으면 setTieData()로 설정
+    coderStore.setTieData(coderStore.tournament_uuid, coderStore.tieNo, coderStore.gameDate)
+
+    // API 호출
+    coderStore.fetchCoderInfo()
+
+    // websocket 호출
+    coderStore.initWebSocket()
   },
-  computed: {
-    formattedWarmUpTime() {
-      return this.formatTime(this.warmUpTime);
-    },
-    formattedMatchTime() {
-      return this.formatTime(this.matchTime);
-    },
-    formattedBreakTime() {
-      return this.formatTime(this.breakTime);
-    },
+  beforeUnmount() {
+    const coderStore = useCoderStore()
+
+    coderStore.closeWebSocket();
   },
   methods: {
-    // 초 -> "mm:ss" 변환
-    formatTime(sec) {
-      const m = String(Math.floor(sec / 60)).padStart(2, "0");
-      const s = String(sec % 60).padStart(2, "0");
-      return `${m}:${s}`;
-    },
-    // 시작 및 리셋 관련 메서드 (예시)
-    startWarmUp() {
-      // 워밍업 시작 로직
-    },
-    resetWarmUpClock() {
-      // 워밍업 리셋 로직
-    },
-    resetScore() {
-      this.teamA.score = 0;
-      this.teamB.score = 0;
-    },
-    adjustWarmUp(sec) {
-      this.warmUpTime += sec;
-    },
+    onResetClick() {
+      if (!this.coderStore.isWarmUpRunning) {
+        this.coderStore.resetWarmUpClock()
+      }
+    }
   },
-};
+  computed: {
+    coderStore() {
+      return useCoderStore()
+    }
+  }
+}
+
 </script>
 
 <style scoped>
@@ -350,6 +330,7 @@ export default {
   font-weight: bold;
   text-align: center;
   width: 200px;
+  cursor: pointer;
 }
 
 /* START, RESET 컨트롤 행 (수평 배치) */
@@ -505,6 +486,9 @@ export default {
   margin-bottom: 0.2rem;
 }
 
-
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 
 </style>

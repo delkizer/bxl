@@ -443,3 +443,12 @@ async def get_gameofficials(
 
     result = officials.get_gameofficials(tournament_uuid, tie_no, match_no, game_uuid)
     return result
+
+@app.get("/api/coderinfo", tags=["Coder"])
+async def get_coderinfo(
+        request: Request,
+        tournament_uuid: Optional[uuid.UUID] = Query(None, description="토너먼트 UUID"),
+        tie_no: Optional[int] = Query(None, description="토너먼트에 해당하는 tie no"),
+):
+    result = coder.get_coderinfo(tournament_uuid, tie_no)
+    return result

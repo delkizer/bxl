@@ -20,4 +20,7 @@ export default {
   postGameOfficials(params = {}) {
     return apiClient.post('/api/gameofficials', params )
   },
+  getCoderInfo(params = {}) {
+    return apiClient.get('/api/coderinfo', {params} )
+  }
 }

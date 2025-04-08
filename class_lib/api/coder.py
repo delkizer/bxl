@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 
+from requests import session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import text
 from fastapi import HTTPException, status
@@ -410,6 +411,61 @@ class Coder:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
             return [str(uuid_val) for uuid_val in rows]
+
+        except HTTPException as http_exc:
+            # HTTPException을 그대로 재전달
+            raise http_exc
+
+        except Exception as e:
+            self.logger.error(f"Error authenticate_user querying the database for query^{query}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    def get_coderinfo(self, tournament_uuid: uuid.UUID, tie_no: int):
+        session = self.bxl_session_factory()
+        try:
+            base_sql = """
+                SELECT 
+                    A.game_no, A.game_status
+                    , A.team1_code, A.team1_score, A.team2_code, A.team2_score
+                    , A.match_no, A.match_type, A.match_point, A.match_status
+                    , B.team_name AS team1_name, C.team_name AS team2_name
+                FROM bxl.game_info A
+                INNER JOIN bxl.team_info B ON A.team1_code = B.team_code
+                INNER JOIN bxl.team_info C ON A.team2_code = C.team_code
+                WHERE A.tournament_uuid = :tournament_uuid
+                  AND A.tie_no = :tie_no
+                ORDER BY CASE A.match_status
+                        WHEN 'IN_PROGRESS' THEN 1
+                        WHEN 'SCHEDULED'   THEN 2
+                        WHEN 'FINISHED'    THEN 3
+                        ELSE 4
+                    END
+                  , CASE
+                        WHEN A.match_status NOT IN ('IN_PROGRESS','SCHEDULED','FINISHED')
+                        THEN random()
+                        ELSE 0
+                    END
+                , A.match_no ASC, A.game_no ASC
+                LIMIT 1
+            """
+
+            query = text(base_sql)
+            result = session.execute(query, {
+                "tournament_uuid": tournament_uuid,
+                "tie_no": tie_no,
+            }).mappings().all()
+
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return result
 
         except HTTPException as http_exc:
             # HTTPException을 그대로 재전달
