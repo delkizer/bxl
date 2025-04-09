@@ -50,6 +50,8 @@ export const useCoderStore = defineStore('coderStore', {
 
     ws: null,
 
+    isNonStop: false,
+
   }),
   persist: {
     enabled: true,
@@ -162,6 +164,32 @@ export const useCoderStore = defineStore('coderStore', {
 
     },
 
+    // 공통 메서드: WebSocket으로 점수 업데이트 요청을 보냄
+    sendScoreUpdate(team, field, change) {
+      if (!this.ws) {
+        console.error("WebSocket not connected");
+        return;
+      }
+      // 예: 연결 상태가 OPEN이 아닐 수도 있으므로 체크
+      if (this.ws.readyState !== WebSocket.OPEN) {
+        console.error("WebSocket not OPEN. Current state:", this.ws.readyState);
+        return;
+      }
+
+      const msg = {
+        action: "update",
+        resource: "score",
+        payload: {
+          team,     // "A" or "B"
+          field,    // "score" | "game" | "point"
+          change,   // "increase" | "decrease"
+        },
+      };
+
+      // 실제 전송
+      this.ws.send(JSON.stringify(msg));
+    },
+
     // 필요시 수동으로 소켓 닫는 액션
     closeWebSocket() {
       if (this.ws && typeof this.ws.close === "function") {
@@ -261,6 +289,7 @@ export const useCoderStore = defineStore('coderStore', {
     incrementScore(team) {
       if (team === 'A') this.teamA.score++;
       else this.teamB.score++;
+      this.sendScoreUpdate(team, 'score', 'increase');
     },
     decrementScore(team) {
       if (team === 'A') {
@@ -268,10 +297,12 @@ export const useCoderStore = defineStore('coderStore', {
       } else {
         this.teamB.score = Math.max(this.teamB.score - 1, 0);
       }
+      this.sendScoreUpdate(team, 'score', 'decrease');
     },
     incrementGame(team) {
       if (team === 'A') this.teamA.game++;
       else this.teamB.game++;
+      this.sendScoreUpdate(team, 'game', 'increase');
     },
     decrementGame(team) {
       if (team === 'A') {
@@ -279,10 +310,12 @@ export const useCoderStore = defineStore('coderStore', {
       } else {
         this.teamB.game = Math.max(this.teamB.game - 1, 0);
       }
+      this.sendScoreUpdate(team, 'game', 'decrease');
     },
     incrementPoint(team) {
       if (team === 'A') this.teamA.point++;
       else this.teamB.point++;
+      this.sendScoreUpdate(team, 'point', 'increase');
     },
     decrementPoint(team) {
       if (team === 'A') {
@@ -290,18 +323,16 @@ export const useCoderStore = defineStore('coderStore', {
       } else {
         this.teamB.point = Math.max(this.teamB.point - 1, 0);
       }
+      this.sendScoreUpdate(team, 'point', 'decrease');
     },
 
     // 추가: Reset Score
     resetScore() {
       this.teamA.score = 0;
-      this.teamA.game = 0;
-      this.teamA.point = 0;
       this.teamB.score = 0;
-      this.teamB.game = 0;
-      this.teamB.point = 0;
+      this.sendScoreUpdate('A', 'score', 'reset');
+      this.sendScoreUpdate('B', 'score', 'reset');
     },
-
   },
 
    getters: {

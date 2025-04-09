@@ -78,6 +78,9 @@
         </div>
         <!-- 중앙 영역을 감싸는 컨테이너 추가 -->
         <div class="warmup-clock-setting-center">
+          <div class="non-stop-row">
+            <label><input type="checkbox" v-model="coderStore.isNonStop"/> Non-Stop Mode</label>
+          </div>
           <div class="warmup-clock-setting-box" @click="coderStore.cycleTimeTarget">
             {{ coderStore.currentTargetLabel}}
           </div>
@@ -486,9 +489,15 @@ export default {
   margin-bottom: 0.2rem;
 }
 
-.disabled {
-  opacity: 0.5;
-  pointer-events: none;
+.non-stop-row {
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fff; /* 흰색 배경 추가 */
+  padding: 0.5rem; /* 예시: 배경에 약간의 여백 */
+  border-radius: 4px; /* 예시: 모서리 둥글림 */
+  border: 1px solid #ccc; /* 예시: 테두리 추가 */
+
 }
 
 </style>

@@ -1,35 +1,28 @@
 <template>
   <div class="main-container">
-    <!-- 첫 번째 줄 -->
-    <div class="buttons-wrapper">
-      <div class="button corder-button" @click="goToCoderPage">
-        <p>BXL</p>
-        <p>Coder's Page</p>
-      </div>
-      <div class="button scorer-button" @click="goToScorerPage">
-        <p>BXL</p>
-        <p>Scorer's Page</p>
-      </div>
-    </div>
+    <!-- 헤더 섹션: 제목 등 -->
+    <header class="header">
+      <h1 class="title">Welcome to BXL</h1>
+      <p class="subtitle">Modern UI/UX Redesign Example</p>
+    </header>
 
-    <!-- 두 번째 줄 -->
-    <div class="buttons-wrapper">
-      <div class="button tour-button" @click="goToTourPage">
-        <p>BXL</p>
-        <p>Tour's Page</p>
-      </div>
-      <div class="button team-button" @click="goToGamePage">
-        <p>BXL</p>
-        <p>Team's Page</p>
-      </div>
-    </div>
-
-    <!-- 세 번째 줄 -->
-    <div class="buttons-wrapper">
-      <div class="button official-button" @click="goToOfficialPage">
-        <p>BXL</p>
-        <p>Official's Page</p>
-      </div>
+    <!-- 버튼 그리드 -->
+    <div class="buttons-grid">
+      <button class="btn coder" @click="goToCoderPage">
+        <span class="btn-text">Coder's Page</span>
+      </button>
+      <button class="btn scorer" @click="goToScorerPage">
+        <span class="btn-text">Scorer's Page</span>
+      </button>
+      <button class="btn tour" @click="goToTourPage">
+        <span class="btn-text">Tour's Page</span>
+      </button>
+      <button class="btn team" @click="goToGamePage">
+        <span class="btn-text">Team's Page</span>
+      </button>
+      <button class="btn official" @click="goToOfficialPage">
+        <span class="btn-text">Official's Page</span>
+      </button>
     </div>
   </div>
 </template>
@@ -58,86 +51,103 @@ export default {
 </script>
 
 <style scoped>
-/* 브라우저 전체를 100%로 쓰기 위해 html, body 초기 세팅 */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-/* 메인 컨테이너를 화면 정중앙에 배치 */
+/* -------------------- 레이아웃 & 컨테이너 -------------------- */
 .main-container {
-  position: absolute;
-  width: 800px;
-  margin: 0 auto;
-  padding: 16px;
-  top: 50%;      /* 수직 중앙 */
-  left: 50%;     /* 수평 중앙 */
-  transform: translate(-50%, -50%); /* 자기 크기의 절반만큼 이동해 완전 중앙 정렬 */
-}
-
-/* 각 줄(버튼 묶음)을 가로로 배치하고 중앙 정렬 */
-.buttons-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0; /* 줄 간격 */
-}
-
-/* 공통 버튼 스타일 */
-.button {
-  width: 300px;
-  height: 165px; /* 기존 높이(275px)의 약 60% */
+  /* 전체 레이아웃이 세로로 쌓이고, 아이템을 중앙 정렬 */
   display: flex;
   flex-direction: column;
+  align-items: center;
+  min-height: 100vh;  /* 내용이 많으면 자동으로 늘어남 */
+  padding: 2rem 1rem;
+  background-color: #f0f4f8; /* 부드러운 라이트 톤 배경 */
+}
+
+/* 헤더 섹션 */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+/* 버튼 컨테이너 (Grid 레이아웃) */
+.buttons-grid {
+  display: grid;
+  gap: 1.5rem;
+  /* 화면 크기에 따라 버튼이 자동으로 재정렬 */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  width: 100%;
+  max-width: 900px;
+}
+
+/* -------------------- 버튼 스타일 -------------------- */
+.btn {
+  display: flex;
   justify-content: center;
   align-items: center;
-  border: 2px solid #333;
-  font-family: Arial, sans-serif;
+  padding: 1.5rem 1rem;
+  border: none;
+  border-radius: 12px; /* 부드러운 라운드 */
+  font-size: 1.1rem;
+  font-weight: bold;
   cursor: pointer;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-  margin: 0 20px; /* 버튼 간 좌우 간격 */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16); /* 미세한 그림자 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* 글자 스타일 */
-.button p {
-  margin: 5px 0;
-  font-size: 32px;
-  text-align: center;
+.btn:hover {
+  /* 호버 시 약간의 확대 및 그림자 강조 */
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* 버튼별 색상 구분 */
-.corder-button {
-  background-color: red;
-  color: black;
+.btn:active {
+  /* 클릭 시 살짝 눌리는 느낌 */
+  transform: translateY(0);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
 }
 
-.scorer-button {
-  background-color: white;
-  color: black;
+/* 버튼 내부 텍스트 */
+.btn-text {
+  color: #fff; /* 각 배경색과 대비되는 흰색 */
 }
 
-.tour-button {
-  background-color: #4CAF50;
-  color: black;
+/* -------------------- 각 버튼별 컬러 -------------------- */
+/* 필요에 따라 동일 톤 & 채도의 다양한 컬러를 활용 */
+.coder {
+  background-color: #1D4ED8; /* 파랑: Tailwind Blue 700 예시 */
+}
+.scorer {
+  background-color: #10B981; /* 초록: Tailwind Green 500 예시 */
+}
+.tour {
+  background-color: #F59E0B; /* 옐로우/오렌지 계열 */
+}
+.team {
+  background-color: #EF4444; /* 레드 */
+}
+.official {
+  background-color: #6366F1; /* 인디고 계열 */
 }
 
-.team-button {
-  background-color: #FFC107;
-  color: black;
-}
-
-.official-button {
-  background-color: #9c27b0;
-  color: white;
-}
-
-/* 반응형 처리: 960px 이하에서는 한 줄에 2개 버튼이 겹치지 않도록 세로로 배치 */
-@media screen and (max-width: 960px) {
-  .buttons-wrapper {
-    flex-direction: column;
+/* 반응형 폰트 크기 (선택적 적용) */
+@media screen and (max-width: 480px) {
+  .title {
+    font-size: 1.5rem;
   }
-  .button {
-    margin: 10px 0;
+  .btn {
+    font-size: 1rem;
+    padding: 1rem;
   }
 }
 </style>

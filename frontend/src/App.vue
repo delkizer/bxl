@@ -15,7 +15,8 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
-  background-color: #4a7ab7; /* 배경색 */
+  background-color: #f0f4f8;
+
   /* overflow: hidden; 는 제거 */
 }
 body {
