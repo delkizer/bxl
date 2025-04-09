@@ -112,7 +112,7 @@ export const useCoderStore = defineStore('coderStore', {
         this.ws = null;
       }
 
-      const url = `ws://localhost:8080/ws/${this.tournament_uuid}/${this.tieNo}`;
+      const url = `${import.meta.env.VITE_WEBSOCKET_URL}/ws/${this.tournament_uuid}/${this.tieNo}`;
       console.log(url)
       this.ws = new WebSocket(url);
 
