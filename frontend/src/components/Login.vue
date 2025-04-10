@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-page">
     <div class="login-box">
       <h1>Login</h1>
       <form @submit.prevent="onLogin">
@@ -21,7 +21,7 @@
             placeholder="Enter your password"
           />
         </div>
-        <button type="submit">Log In</button>
+        <button type="submit" class="login-btn">Log In</button>
       </form>
     </div>
   </div>
@@ -64,67 +64,105 @@ export default {
 </script>
 
 <style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/*
+  1) login-page:
+     - 화면 너비 < 1024px: flexbox 중앙
+     - 화면 너비 >= 1024px: absolute 중앙
+     - 밝은 배경(#f8fafc)
+*/
+.login-page {
   width: 100%;
-  height: 100vh;
-  background-color: #4b7cb6;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 2rem;
 }
 
+/* 1024px 이상일 때 절대 위치로 완전 중앙 */
+@media (min-width: 1024px) {
+  .login-page {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/*
+  2) login-box:
+     - 흰색 카드 스타일
+*/
 .login-box {
-  position: absolute;
-  top: 50%;      /* 수직 중앙 */
-  left: 50%;     /* 수평 중앙 */
-  transform: translate(-50%, -50%); /* 자기 크기의 절반만큼 이동해 완전 중앙 정렬 */
   width: 400px;
-  padding: 40px;
-  background-color: white;
-  border: 2px solid #333;
+  background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
+/* 타이틀 */
 .login-box h1 {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 1.5rem;
   font-family: Arial, sans-serif;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
+/* input-wrapper */
 .input-wrapper {
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
 .input-wrapper label {
-  margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 0.9rem;
   font-weight: bold;
   font-family: Arial, sans-serif;
 }
 
+/* 인풋 */
 .input-wrapper input {
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
 }
 
-button[type='submit'] {
+.input-wrapper input:focus {
+  border-color: #93c5fd; /* 포커스 시 파랑 테두리 */
+  box-shadow: 0 0 0 3px rgba(147,197,253,0.3);
+}
+
+/*
+  3) 로그인 버튼
+     - 기존 “저장(녹색)” 계열과 통일감
+*/
+.login-btn {
   width: 100%;
-  padding: 15px;
-  background-color: red;
-  color: white;
-  font-size: 16px;
+  padding: 0.75rem;
+  background-color: #70c16b; /* 초록 */
+  color: #fff;
+  font-size: 1rem;
   font-weight: bold;
   font-family: Arial, sans-serif;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-button[type='submit']:hover {
-  background-color: darkred;
+.login-btn:hover {
+  background-color: #64ad5f;
+}
+.login-btn:active {
+  transform: scale(0.98);
 }
 </style>
