@@ -57,8 +57,9 @@
             <option
               v-for="nation in nationList"
               :key="nation.code"
-              :value="nation.code.trim()">
-              {{nation.code_desc}}
+              :value="nation.code.trim()"
+            >
+              {{ nation.code_desc }}
             </option>
           </select>
         </div>
@@ -73,6 +74,7 @@
           />
         </div>
       </div>
+
       <!-- 상세 장소 -->
       <div class="form-row">
         <div class="form-group right" style="flex: 3;">
@@ -85,18 +87,19 @@
           />
         </div>
       </div>
+
+      <!-- 버튼 영역 -->
+      <div class="button-container">
+        <button class="btn btn-save" @click="saveData">저장</button>
+        <button class="btn btn-cancel" @click="showExitModal = true">종료</button>
+        <button class="btn btn-delete" @click="handleDelete" v-if="tournament_uuid">
+          삭제
+        </button>
+        <!-- v-if="existingUuid" : 수정 모드일 때만 삭제 버튼 표시 -->
+      </div>
     </div>
 
-    <!-- 버튼 영역 -->
-    <div class="button-container">
-      <button class="btn btn-save" @click="saveData">
-        저장
-      </button>
-      <button class="btn btn-cancel" @click="showExitModal = true">종료</button>
-    </div>
-  </div>
-
-    <!-- 검증 에러 모달 (모든 필수 항목 누락 시) -->
+    <!-- 검증 에러 모달 -->
     <ConfirmationModal
       :visible="showValidationModal"
       title="입력 오류"
@@ -128,18 +131,29 @@
       @cancel="handleExitCancel"
     />
 
-
+    <!-- 삭제 모달 -->
+    <ConfirmationModal
+      :visible="showDeleteModal"
+      title="삭제 확인"
+      message="정말로 삭제하시겠습니까? 삭제 후에는 복구가 불가능합니다."
+      confirmButtonLabel="확인"
+      cancelButtonLabel="취소"
+      @confirm="handleDeleteConfirm"
+      @cancel="handleDeleteCancel"
+    />
+  </div>
 </template>
 
 <script>
-import tourApi from '@/api/tourApi.js';
+import tourApi from "@/api/tourApi.js";
 import Confirmation from "@/components/modal/Confirmation.vue";
 
 export default {
   name: "TournamentInfoPage",
-  components: {ConfirmationModal: Confirmation},
+  components: { ConfirmationModal: Confirmation },
   data() {
     return {
+      tournament_uuid: null,
       tournament_title: "",
       start_date: "",
       end_date: "",
@@ -147,59 +161,66 @@ export default {
       nation_code: "KOR",
       city_name: "서울",
       stadium_name: "장충체육관",
-      is_bxl : true,
+      is_bxl: true,
 
       // 모달 표시 여부
-      showSaveModal: false,       // 저장 모달
-      showExitModal: false,       // 종료 모달
-      showValidationModal: false
+      showSaveModal: false,
+      showExitModal: false,
+      showValidationModal: false,
+
+      // 삭제 모달
+      showDeleteModal: false,
     };
   },
   async mounted() {
-    this.existingUuid = this.$route.params.uuid;
-    if (this.existingUuid) {
-      // 수정 모드로 간주
-      await this.loadTournamentData(this.existingUuid);
+    this.tournament_uuid = this.$route.params.uuid;
+    if (this.tournament_uuid) {
+      await this.loadTournamentData(this.tournament_uuid);
     }
-
     try {
-      const response = await tourApi.getNationList({})
+      const response = await tourApi.getNationList({});
       this.nationList = response.data;
-    } catch ( error ) {
-          console.error("국가 목록 로드 실패:", error);
+    } catch (error) {
+      console.error("국가 목록 로드 실패:", error);
     }
   },
   methods: {
-
     handleExitConfirm() {
-      this.showExitModal = false
-      this.$router.push('/')
+      this.showExitModal = false;
+      this.$router.push("/");
     },
     handleExitCancel() {
-      this.showExitModal = false
+      this.showExitModal = false;
     },
+
     async handleSaveConfirm() {
-      try{
-        this.showSaveModal = false
-        const response = await  tourApi.postTourPage({
-          "tournament_title":  this.tournament_title,
-          "start_date":  this.start_date,
-          "end_date":  this.end_date,
-          "nation_code":  this.nation_code,
-          "city_name":  this.city_name,
-          "stadium_name":  this.stadium_name,
-          "is_bxl":  this.is_bxl,
-        })
-      } catch ( error) {
+      try {
+        this.showSaveModal = false;
+        const payload = {
+          tournament_title: this.tournament_title,
+          start_date: this.start_date,
+          end_date: this.end_date,
+          nation_code: this.nation_code,
+          city_name: this.city_name,
+          stadium_name: this.stadium_name,
+          is_bxl: this.is_bxl,
+          ...(this.tournament_uuid ? {tournament_uuid: this.tournament_uuid} : {})
+        };
+        console.log(payload)
+        const response = await tourApi.postTourPage( payload);
+        console.log("대회 등록 완료:", response.data);
+        alert("대회 등록 완료");
+        this.$router.push("/tourlist");
+      } catch (error) {
         console.error("대회 등록 실패:", error);
+        alert("대회 등록 실패");
       }
     },
     handleSaveCancel() {
-      this.showSaveModal = false
+      this.showSaveModal = false;
     },
 
     saveData() {
-      // 필수 항목 누락 체크
       if (
         !this.tournament_title ||
         !this.start_date ||
@@ -207,20 +228,15 @@ export default {
         !this.city_name ||
         !this.stadium_name
       ) {
-        // 모달 열기
         this.showValidationModal = true;
-      }
-      else {
+      } else {
         this.showSaveModal = true;
       }
     },
     closeValidationModal() {
-      // 모달 닫기
       this.showValidationModal = false;
-      // 첫 번째 누락 필드에 포커스
       this.focusFirstEmptyField();
     },
-
     focusFirstEmptyField() {
       if (!this.tournament_title) {
         this.$refs.titleInput.focus();
@@ -235,27 +251,48 @@ export default {
       }
     },
     async loadTournamentData(uuid) {
-      console.log(uuid)
+      console.log("로드할 UUID:", uuid);
       try {
         const response = await tourApi.getTourList({ tournament_uuid: uuid });
-        // 받은 데이터로 폼에 반영
         const data = response.data;
-        const item = data[0];  // 배열의 첫 번째 객체
+        const item = data[0];
 
-        // 폼에 반영할 때, 필드명이 맞도록 주의하여 할당
         this.tournament_title = item.tournament_title;
-        this.start_date       = item.start_date;
-        this.end_date         = item.end_date;
-        // 기존에는 nation_code를 사용했으나, 반환값이 nation_name만 주어진다면
-        // 이를 어떻게 처리할지 결정해야 합니다(예: 그대로 이름을 저장하거나, 직접 코드로 변환).
-        this.nation_code      = item.nation_code;
-        this.city_name        = item.city_name;
-
-        // stadium_name은 응답에 없으므로, 필요하면 기본값으로 세팅
-        this.stadium_name     = item.stadium_name;
-      } catch(e) {
-        console.error('기존 대회 불러오기 실패:', e);
+        this.start_date = item.start_date;
+        this.end_date = item.end_date;
+        this.nation_code = item.nation_code;
+        this.city_name = item.city_name;
+        this.stadium_name = item.stadium_name;
+      } catch (e) {
+        console.error("기존 대회 불러오기 실패:", e);
       }
+    },
+
+    // 삭제 버튼 클릭 -> 삭제 모달
+    handleDelete() {
+      // 수정 모드가 아닐 때( uuid 없음 )는 삭제 불가 처리
+      if (!this.tournament_uuid) {
+        alert("새 대회 등록 모드에서는 삭제할 수 없습니다.");
+        return;
+      }
+      this.showDeleteModal = true;
+    },
+    // 삭제 확정 -> API 호출
+    async handleDeleteConfirm() {
+      try {
+        // deleteTourPage : URI/tourpage/{tournament_uuid}로 DELETE 요청
+        await tourApi.deleteTourPage(this.tournament_uuid);
+        alert("대회가 삭제되었습니다.");
+        this.$router.push("/tourlist");
+      } catch (error) {
+        console.log("삭제 실패:", error);
+        alert("삭제 실패");
+      } finally {
+        this.showDeleteModal = false;
+      }
+    },
+    handleDeleteCancel() {
+      this.showDeleteModal = false;
     },
   },
 };
@@ -263,137 +300,152 @@ export default {
 
 <style scoped>
 .game-info-page {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-
-  /* 자기 자신의 너비·높이의 절반만큼 좌상단으로 이동하여 정중앙 배치 */
-  transform: translate(-50%, -50%);
-
-  /* 배경색, 크기, 기타 스타일 */
-  background-color: #4b7cb6;
-  width: 500px;   /* 적절한 너비 */
-  min-height: 400px; /* 혹은 auto, 적절히 조정 */
-
-  /* 내용 정렬(내부 요소들에 대해서) */
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f8fafc;
   display: flex;
-  flex-direction: column;
-  align-items: center;    /* 수평 중앙 정렬 */
-  justify-content: center;/* 수직 중앙 정렬 */
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 1.5rem;
+}
 
-  /* 필요 시 내부 여백 */
-  padding: 20px;
+@media (min-width: 1024px) {
+  .game-info-page {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .form-container {
+  width: 600px;
+  max-width: 90%;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-sizing: border-box;
+
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 .form-row {
   display: flex;
-  gap: 20px;
+  gap: 1rem;
+}
+
+@media (max-width: 960px) {
+  .form-row {
+    flex-direction: column;
+  }
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  background-color: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  padding: 0.75rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
 }
 
 .form-group label {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 0.95rem;
   text-align: center;
+  margin-bottom: 0.5rem;
 }
 
 .form-control {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 0.95rem;
+  outline: none;
 }
-
+.form-control:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.3);
+}
 select.form-control {
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg ...");
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 16px;
-  padding-right: 30px;
+  padding-right: 2rem;
 }
 
 .left {
-  width: 200px;
-  height: 70px;
+  width: 120px;
+  min-width: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-
-.right {
-  flex: 3;
-}
-
 .middle {
   flex: 1;
+}
+.right {
+  flex: 2;
 }
 
 .button-container {
   display: flex;
   justify-content: flex-end;
-  gap: 20px;
-  margin-top: 40px;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .btn {
-  padding: 15px 30px;
-  font-size: 18px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  background-color: white;
-  color: #333;
+  border-radius: 4px;
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
+/* 녹색 */
 .btn-save {
-  background-color: white;
+  background-color: #70c16b;
+  color: #fff;
+}
+.btn-save:hover {
+  background-color: #64ad5f;
+}
+.btn-save:active {
+  transform: scale(0.98);
 }
 
+/* 기존 종료용 붉은색 */
 .btn-cancel {
-  background-color: white;
+  background-color: #f56b6b;
+  color: #fff;
+}
+.btn-cancel:hover {
+  background-color: #eb5e5e;
+}
+.btn-cancel:active {
+  transform: scale(0.98);
 }
 
-.form-row:nth-child(3) .form-group.middle,
-.form-row:nth-child(3) .form-group.right {
-  flex: 1;
+/* 삭제 전용: 더 강렬한 붉은색 */
+.btn-delete {
+  background-color: #dc2626; /* Tailwind Red-600 */
+  color: #fff;
 }
-
-/* 반응형 */
-@media (max-width: 960px) {
-  .form-row {
-    flex-direction: column;
-  }
-  .left {
-    width: 100%;
-    max-width: 100%;
-  }
-  .right, .middle {
-    max-width: 100%;
-  }
+.btn-delete:hover {
+  background-color: #b91c1c; /* Tailwind Red-700 */
 }
-
-.modal-content h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  text-align: center;
+.btn-delete:active {
+  transform: scale(0.98);
 }
-
 </style>

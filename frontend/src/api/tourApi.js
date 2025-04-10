@@ -8,8 +8,10 @@ export default {
   postTourPage(params = {}) {
     return apiClient.post('/api/tourpage', params)
   },
+  deleteTourPage(tournament_uuid ) {
+    return apiClient.delete('/api/tourpage', { data: {tournament_uuid} });
+  },
   getTourList(params = {}) {
     return apiClient.get('/api/tourlist', {params})
   }
-
 }

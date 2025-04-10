@@ -2,7 +2,7 @@ import uuid
 
 from typing import Optional, List
 
-from fastapi import FastAPI, Path, HTTPException, status, Depends, Request, Query
+from fastapi import FastAPI, Path, HTTPException, status, Depends, Request, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -227,6 +227,14 @@ async def create_tourpage(
     result = tour.create_tour(tour_info)
     return result
 
+@app.delete("/api/tourpage", tags=["Tournament"])
+async def delete_tourpage(
+        request: Request,
+        tournament_uuid: uuid.UUID = Body(..., embed=True)
+):
+    result = tour.delete_tour(tournament_uuid)
+    return result
+
 @app.get("/api/nationlist", tags=["Tournament"])
 async def get_nationlist(
         request: Request,
@@ -237,6 +245,8 @@ async def get_nationlist(
     """
     result = tour.nation_list()
     return result
+
+
 
 @app.get("/api/tourlist", tags=["Tournament"])
 async def get_tourlist(

@@ -416,4 +416,9 @@ function handleExitCancel() {
   text-align: right;
   margin-top: 10px;
 }
+
+.btn-cancel {
+  background-color: #f56b6b;
+  color: #fff;
+}
 </style>

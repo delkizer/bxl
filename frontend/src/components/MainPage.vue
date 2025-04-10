@@ -3,7 +3,6 @@
     <!-- 헤더 섹션: 제목 등 -->
     <header class="header">
       <h1 class="title">Welcome to BXL</h1>
-      <p class="subtitle">Modern UI/UX Redesign Example</p>
     </header>
 
     <!-- 버튼 그리드 -->
@@ -74,12 +73,6 @@ export default {
   color: #333;
 }
 
-.subtitle {
-  font-size: 1rem;
-  color: #666;
-  margin-top: 0.5rem;
-}
-
 /* 버튼 컨테이너 (Grid 레이아웃) */
 .buttons-grid {
   display: grid;
@@ -148,6 +141,15 @@ export default {
   .btn {
     font-size: 1rem;
     padding: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 }
 </style>

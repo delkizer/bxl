@@ -165,8 +165,8 @@
       class="action-buttons"
       v-if="selectedTournament && selectedTie && selectedMatch && (applyToAllGames || selectedGameUuid)"
     >
-      <button @click="openSaveModal" class="save-btn">Save</button>
-      <button @click="openCancelModal" class="cancel-btn">Cancel</button>
+      <button @click="openSaveModal" class="save-btn">저장</button>
+      <button @click="openCancelModal" class="cancel-btn">취소</button>
     </div>
 
     <!-- Modal: Official 배정 -->
@@ -764,13 +764,39 @@ function cancelAssignments() {
   text-align: right;
   margin: 10px 0;
 }
-.save-btn,
-.cancel-btn {
+
+/* ====== 저장/종료 버튼 색상 통일 ====== */
+.save-btn, .cancel-btn {
   padding: 8px 20px;
-  margin-left: 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
+  font-weight: bold;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  color: #fff;
+  margin-left: 10px;
+}
+
+/* 저장(녹색) */
+.save-btn {
+  background-color: #70c16b; /* 초록 계열 */
+}
+.save-btn:hover {
+  background-color: #64ad5f;
+}
+.save-btn:active {
+  transform: scale(0.98);
+}
+
+/* 종료(빨강) */
+.cancel-btn {
+  background-color: #f56b6b; /* 빨강 계열 */
+}
+.cancel-btn:hover {
+  background-color: #eb5e5e;
+}
+.cancel-btn:active {
+  transform: scale(0.98);
 }
 
 /* 모달 */
@@ -817,7 +843,7 @@ function cancelAssignments() {
 
 .official-list-table tbody tr:hover {
   background-color: #f5f5f5;
-  cursor: pointer;   /* 포인터 커서 */
+  cursor: pointer;
 }
 
 .selected-row {
@@ -830,7 +856,7 @@ function cancelAssignments() {
   cursor: not-allowed;
 }
 .assigned-row:hover {
-  background-color: #eee; /* 호버해도 변하지 않도록 */
+  background-color: #eee;
 }
 
 .btn-clear {

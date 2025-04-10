@@ -22,56 +22,52 @@ class Tour:
         self.db = ConfigDB()
         self.bxl_session_factory = self.db.get_bxl_session_factory(self.config)
 
+    def delete_tour(self, tournament_uuid):
+        session = self.bxl_session_factory()
+        try:
+            delete_query = text("""
+                DELETE FROM bxl.tournament_info
+                WHERE tournament_uuid = :tournament_uuid
+            """)
+            result = session.execute(delete_query, {"tournament_uuid": tournament_uuid})
+
+            # 삭제된 행이 없으면 해당 대회가 존재하지 않음을 의미
+            if result.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Tournament not found")
+
+            session.commit()
+            return {"msg": "Tournament deleted successfully"}
+
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"Tournament deletion failed: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+        finally:
+            session.close()
+
     def create_tour(self, tourinfo: TourInfo):
         session = self.bxl_session_factory()
         try:
-            query = text("""
-            MERGE INTO bxl.tournament_info AS t
-            USING (
-              VALUES (
-                  :tournament_uuid, :tournament_title, :nation_code, :city_name, :stadium_name, :is_bxl
-                  , :start_date, :end_date )
-            ) AS v (
-                uuid, title, n_code, c_name, s_name, bxl_flag, s_date, e_date )
-            ON t.tournament_uuid = v.uuid   -- PK(또는 UNIQUE) 컬럼 기준 매칭
-            WHEN MATCHED THEN
-            UPDATE
-            SET tournament_title = v.title,
-                nation_code      = v.n_code,
-                city_name        = v.c_name,
-                stadium_name     = v.s_name,
-                is_bxl           = v.bxl_flag,
-                start_date       = v.s_date,
-                end_date         = v.e_date
-            WHEN NOT MATCHED THEN
-            INSERT (
-                tournament_uuid, tournament_title, nation_code, city_name, stadium_name, is_bxl
-                , start_date, end_date )
-            VALUES (
-                uuid_generate_v4(), v.title, v.n_code, v.c_name, v.s_name, v.bxl_flag, v.s_date, v.e_date )
-             """)
+            # 문자열 날짜를 date 객체로 변환 (None일 경우 처리)
+            start_date_obj = datetime.strptime(tourinfo.start_date, '%Y-%m-%d').date() if tourinfo.start_date else None
+            end_date_obj = datetime.strptime(tourinfo.end_date, '%Y-%m-%d').date() if tourinfo.end_date else None
 
-            start_date_obj = datetime.strptime(tourinfo.start_date, '%Y-%m-%d').date()
-            end_date_obj = datetime.strptime(tourinfo.end_date, '%Y-%m-%d').date()
+            if tourinfo.tournament_uuid:
+                # tournament_uuid가 제공된 경우 UPDATE 실행
+                self._update_tournament(session, tourinfo, start_date_obj, end_date_obj)
+                msg = "Tournament updated successfully"
+            else:
+                # tournament_uuid가 없으면 새 레코드 INSERT
+                self._insert_tournament(session, tourinfo, start_date_obj, end_date_obj)
+                msg = "Tournament created successfully"
 
-            session.execute(query,             {
-                "tournament_uuid": tourinfo.tournament_uuid,
-                "tournament_title": tourinfo.tournament_title,
-                "nation_code": tourinfo.nation_code,
-                "city_name": tourinfo.city_name,
-                "stadium_name": tourinfo.stadium_name,
-                "is_bxl": tourinfo.is_bxl,
-                "start_date": start_date_obj,
-                "end_date": end_date_obj
-            })
             session.commit()
-            return {"msg": "Tournament created successfully"}
+            return {"msg": msg}
 
         except IntegrityError as e:
             session.rollback()
-
-            error_msg = str(e.orig).lower()  # or str(e).lower()
-
+            error_msg = str(e.orig).lower()
             if "unique_tournament_title" in error_msg:
                 raise HTTPException(status_code=409, detail="이미 동일한 대회명이 존재합니다.")
             elif "unique_nation_city_dates" in error_msg:
@@ -81,10 +77,11 @@ class Tour:
 
         except Exception as e:
             session.rollback()
-            self.logger.error(f"User creation failed: {e}")
+            self.logger.error(f"Tournament creation/update failed: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
         finally:
             session.close()
+
 
     def nation_list(self):
         session = self.bxl_session_factory()
@@ -196,3 +193,46 @@ class Tour:
         finally:
             session.close()
 
+    def _insert_tournament(self, session, tourinfo: TourInfo, start_date_obj, end_date_obj):
+        insert_query = text("""
+            INSERT INTO bxl.tournament_info (
+                tournament_uuid, tournament_title, nation_code, city_name, stadium_name,
+                is_bxl, start_date, end_date
+            )
+            VALUES (
+                uuid_generate_v4(), :tournament_title, :nation_code, :city_name, :stadium_name,
+                :is_bxl, :start_date, :end_date
+            )
+        """)
+        session.execute(insert_query, {
+            "tournament_title": tourinfo.tournament_title,
+            "nation_code": tourinfo.nation_code,
+            "city_name": tourinfo.city_name,
+            "stadium_name": tourinfo.stadium_name,
+            "is_bxl": tourinfo.is_bxl,
+            "start_date": start_date_obj,
+            "end_date": end_date_obj
+        })
+
+    def _update_tournament(self, session, tourinfo: TourInfo, start_date_obj, end_date_obj):
+        update_query = text("""
+            UPDATE bxl.tournament_info
+               SET tournament_title = :tournament_title,
+                   nation_code      = :nation_code,
+                   city_name        = :city_name,
+                   stadium_name     = :stadium_name,
+                   is_bxl           = :is_bxl,
+                   start_date       = :start_date,
+                   end_date         = :end_date
+             WHERE tournament_uuid = :tournament_uuid
+        """)
+        session.execute(update_query, {
+            "tournament_uuid": tourinfo.tournament_uuid,
+            "tournament_title": tourinfo.tournament_title,
+            "nation_code": tourinfo.nation_code,
+            "city_name": tourinfo.city_name,
+            "stadium_name": tourinfo.stadium_name,
+            "is_bxl": tourinfo.is_bxl,
+            "start_date": start_date_obj,
+            "end_date": end_date_obj
+        })
