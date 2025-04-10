@@ -525,7 +525,7 @@ export default {
   border-radius: 4px;
   font-size: 0.9rem;
   margin: 1px;
-
+}
 
 /* 버튼 영역 */
 .button-container {
