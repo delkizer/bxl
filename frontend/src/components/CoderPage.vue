@@ -79,16 +79,16 @@
         <!-- 중앙 영역을 감싸는 컨테이너 추가 -->
         <div class="warmup-clock-setting-center">
           <div class="non-stop-row">
-            <label><input type="checkbox" v-model="coderStore.isNonStop"/> Non-Stop Mode</label>
+            <label><input type="checkbox" v-model="coderStore.isNonStop" @change="onNonStopChange"/> Non-Stop Mode</label>
           </div>
           <div class="warmup-clock-setting-box" @click="coderStore.cycleTimeTarget">
             {{ coderStore.currentTargetLabel}}
           </div>
           <!-- START, RESET 버튼을 중앙 영역 아래에 배치 -->
           <div class="warmup-control-row">
-            <button class="warmup-control-box" @click="coderStore.startWarmUp" :disabled="coderStore.isWarmUpRunning">START</button>
-            <button class="warmup-control-box" @click="coderStore.stopWarmUp" v-if="coderStore.isWarmUpRunning">PAUSE</button>
-            <button class="warmup-control-box" @click="onResetClick" :disabled="coderStore.isWarmUpRunning"> RESET</button>
+            <button class="warmup-control-box" @click="coderStore.startTimer()">START</button>
+            <button class="warmup-control-box" @click="coderStore.pauseTimer()">PAUSE</button>
+            <button class="warmup-control-box" @click="onResetClick">RESET</button>
           </div>
         </div>
         <div class="warmup-clock-setting-col">
@@ -196,6 +196,18 @@ export default {
     coderStore() {
       return useCoderStore()
     }
+  },
+  setup() {
+    const coderStore = useCoderStore();
+
+    function onNonStopChange(event) {
+      const newVal = event.target.checked;
+      coderStore.setNonStop(newVal)
+    }
+
+    return {
+      coderStore, onNonStopChange
+    };
   }
 }
 

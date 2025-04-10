@@ -37,8 +37,6 @@ export const useCoderStore = defineStore('coderStore', {
 
     // 추가: Warm Up, Match, Break
     warmUpTime: DEFAULT_TIMES.warmUp,
-    warmUpTimer: null,
-    isWarmUpRunning: false,
     matchTime: DEFAULT_TIMES.match,
     breakTime: DEFAULT_TIMES.break,
 
@@ -121,8 +119,6 @@ export const useCoderStore = defineStore('coderStore', {
       // 연결 성공
       this.ws.onopen = () => {
         console.log("WebSocket connected");
-        // 필요시 서버에 초기 데이터 전송
-        // this.ws.send(JSON.stringify({ action: "HELLO_SERVER" }));
       };
 
       // 서버로부터 메시지 수신
@@ -143,6 +139,14 @@ export const useCoderStore = defineStore('coderStore', {
               this.teamB.game  = payload.teamB.game;
               this.teamB.point = payload.teamB.point;
             }
+            if (payload.timeInfo) {
+              this.warmUpTime = payload.timeInfo.warmupTime;
+              this.matchTime  = payload.timeInfo.matchTime;
+              this.breakTime  = payload.timeInfo.breakTime;
+            }
+            if (payload.hasOwnProperty('nonStop')) {
+              this.isNonStop = payload.nonStop;
+            }
           }
 
           // 그 외 필요한 상태 업데이트
@@ -162,6 +166,44 @@ export const useCoderStore = defineStore('coderStore', {
         this.ws = null;
       };
 
+    },
+
+    // -----------------------------
+    // 시간(Start/Pause/Adjust) 관련
+    // -----------------------------
+    startTimer() {
+      // 기존 local setInterval, isWarmUpRunning 등은 제거
+      // 대신 서버에 "start" 요청만 보냄
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        console.error("WebSocket not open. Can't start timer.");
+        return;
+      }
+      // currentTimeTarget: "WARMUP" | "MATCH" | "BREAK"
+      const key = this.currentTimeTarget.toLowerCase(); // "warmup" | "match" | "break"
+      const msg = {
+        action: "update",
+        resource: "time",
+        payload: {
+          [key]: "start", // ex) { warmup: "start" }
+        },
+      };
+      this.ws.send(JSON.stringify(msg));
+    },
+
+    pauseTimer() {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        console.error("WebSocket not open. Can't pause timer.");
+        return;
+      }
+      const key = this.currentTimeTarget.toLowerCase();
+      const msg = {
+        action: "update",
+        resource: "time",
+        payload: {
+          [key]: "pause", // ex) { match: "pause" }
+        },
+      };
+      this.ws.send(JSON.stringify(msg));
     },
 
     // 공통 메서드: WebSocket으로 점수 업데이트 요청을 보냄
@@ -198,35 +240,6 @@ export const useCoderStore = defineStore('coderStore', {
       }
     },
 
-    startWarmUp() {
-      // 이미 타이머가 동작 중이라면 중복 시작 안 함
-      if (this.isWarmUpRunning) return;
-
-      this.isWarmUpRunning = true
-
-      // 1초 간격으로 warmUpTime--
-      this.warmUpTimer = setInterval(() => {
-        // 시간이 아직 남아 있으면 1초씩 감소
-        if (this.warmUpTime > 0) {
-          this.warmUpTime--
-        } else {
-          // 0초가 되면 멈춤
-          clearInterval(this.warmUpTimer)
-          this.warmUpTimer = null
-          this.isWarmUpRunning = false
-        }
-      }, 1000)
-    },
-
-    // 멈추거나 타이머 중단(예: 0초이거나, 다른 이유로 정지)
-    stopWarmUp() {
-      if (this.warmUpTimer) {
-        clearInterval(this.warmUpTimer)
-        this.warmUpTimer = null
-      }
-      this.isWarmUpRunning = false
-    },
-
     cycleTimeTarget() {
       if (this.currentTimeTarget === "MATCH") {
         this.currentTimeTarget = "BREAK";
@@ -250,6 +263,30 @@ export const useCoderStore = defineStore('coderStore', {
         this.warmUpTime += sec;
         if (this.warmUpTime < 0) this.warmUpTime = 0;
       }
+
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        // sec > 0일 때는 "increase", sec < 0일 때는 "decrease"로 구분
+        const direction = sec > 0 ? "increase" : "decrease";
+        // +5나 -5처럼 절대값만 보내기 위해 Math.abs() 사용
+        const absSec = Math.abs(sec);
+
+        // currentTimeTarget은 "WARMUP" | "MATCH" | "BREAK" 중 하나
+        // 요구사항에서 payload에 "warmup": "increase" 형태로 보내려면
+        // 키를 소문자로 변환하여 동적으로 매핑
+        const key = this.currentTimeTarget.toLowerCase();
+        // 예: key = 'warmup' | 'match' | 'break'
+
+        const msg = {
+          action: "update",
+          resource: "time",
+          payload: {
+            [key]: direction,
+            sec: absSec
+          },
+        };
+
+        this.ws.send(JSON.stringify(msg));
+      }
     },
 
     // 타이머 초기화
@@ -261,17 +298,6 @@ export const useCoderStore = defineStore('coderStore', {
         this.warmUpTimer = null
       }
       this.isWarmUpRunning = false
-    },
-
-    resetSelectedTime() {
-      if (this.currentTimeTarget === 'MATCH') {
-        this.matchTime = DEFAULT_TIMES.match;   // match 기본값
-      } else if (this.currentTimeTarget === 'BREAK') {
-        this.breakTime = DEFAULT_TIMES.break;    // break 기본값
-      } else {
-        // 'WARMUP'
-        this.warmUpTime = DEFAULT_TIMES.warmUp;  // warm up 기본값
-      }
     },
 
     setTieData(tournament_uuid, tieNo, gameDate) {
@@ -333,6 +359,25 @@ export const useCoderStore = defineStore('coderStore', {
       this.sendScoreUpdate('A', 'score', 'reset');
       this.sendScoreUpdate('B', 'score', 'reset');
     },
+
+    setNonStop(value) {
+      this.isNonStop = value;
+
+      // WebSocket 연결 상태 확인
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        const msg = {
+          action: "update",
+          resource: "time",
+          payload: {
+            nonStop: this.isNonStop,
+          },
+        };
+        this.ws.send(JSON.stringify(msg));
+      } else {
+        console.warn("WebSocket not open. Cannot send nonStop update.");
+      }
+    },
+
   },
 
    getters: {
