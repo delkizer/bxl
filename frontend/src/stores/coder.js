@@ -46,10 +46,16 @@ export const useCoderStore = defineStore('coderStore', {
     matchNo: 0,
     matchPoint: 0,
 
+    gameInfo: {
+      gameNo: 0,
+      gameType: "",
+      suddenDeath: false,
+      shuttleShowdown: false,
+    },
+
     ws: null,
 
     isNonStop: false,
-
   }),
   persist: {
     enabled: true,
@@ -102,6 +108,26 @@ export const useCoderStore = defineStore('coderStore', {
       }
     },
 
+    setGameNo(newGameNo) {
+      // 1) 먼저 store 상태 갱신 (옵션)
+      this.gameInfo.gameNo = newGameNo;
+
+      // 2) WebSocket으로 메시지 전송
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        const msg = {
+          action: "update",
+          resource: "game",
+          payload: {
+            game_no: newGameNo,
+          },
+        };
+        this.ws.send(JSON.stringify(msg));
+        console.log("Sent WS:", msg);
+      } else {
+        console.warn("WebSocket not open. Cannot update game_no.");
+      }
+    },
+
     // -------------------------------
     // WebSocket 관련 action
     // -------------------------------
@@ -127,7 +153,7 @@ export const useCoderStore = defineStore('coderStore', {
           const msgData = JSON.parse(event.data);
           console.log("WS msgData received:", msgData);
 
-          if (msgData.action === "broadcast" && msgData.resource === "score") {
+          if (msgData.action === "broadcast" ) {
             const payload = msgData.payload;
             if (payload.teamA) {
               this.teamA.score = payload.teamA.score;
@@ -144,12 +170,20 @@ export const useCoderStore = defineStore('coderStore', {
               this.matchTime  = payload.timeInfo.matchTime;
               this.breakTime  = payload.timeInfo.breakTime;
             }
-            if (payload.hasOwnProperty('nonStop')) {
+            if (payload.gameInfo) {
+              this.gameInfo.gameNo = payload.gameInfo.gameNo;
+              this.gameInfo.gameType = payload.gameInfo.gameType;
+              this.gameInfo.suddenDeath = payload.gameInfo.suddenDeath;
+              this.gameInfo.shuttleShowdown = payload.gameInfo.shuttleShowdown;
+            }
+            if (typeof payload.nonStop === "boolean") {
               this.isNonStop = payload.nonStop;
+            }
+            if (payload.currentState) {
+              this.currentState = payload.currentState;
             }
           }
 
-          // 그 외 필요한 상태 업데이트
 
         } catch (error) {
           console.error("WS message parse error:", error);
@@ -290,14 +324,17 @@ export const useCoderStore = defineStore('coderStore', {
     },
 
     // 타이머 초기화
-    resetWarmUpClock() {
-      this.warmUpTime = DEFAULT_TIMES.warmUp
-      // 혹시 타이머가 돌아가는 중이라면 멈춤
-      if (this.warmUpTimer) {
-        clearInterval(this.warmUpTimer)
-        this.warmUpTimer = null
-      }
-      this.isWarmUpRunning = false
+    resetClock() {
+      const msg = {
+        action: "update",
+        resource: "time",
+        payload: {
+          "reset" : true
+        },
+      };
+
+      // 실제 전송
+      this.ws.send(JSON.stringify(msg));
     },
 
     setTieData(tournament_uuid, tieNo, gameDate) {
@@ -392,6 +429,12 @@ export const useCoderStore = defineStore('coderStore', {
       if (state.currentTimeTarget === "MATCH") return "Match Clock Setting";
       if (state.currentTimeTarget === "BREAK") return "Break Clock Setting";
       if (state.currentTimeTarget === "WARMUP") return "Warm Up Clock Setting";
+    },
+    currentGameLabel: (state) => {
+      const { gameNo, gameType, suddenDeath } = state.gameInfo;
+      if (!gameNo || !gameType) return "";
+      const base = `Game ${gameNo} (${gameType})`;
+      return suddenDeath ? `${base} [SD]` : base;
     },
   }
 })

@@ -146,12 +146,16 @@
       <div>
         <!-- 추가: 6개 라벨 (가로 배치) -->
         <div class="extra-label-row">
-          <div class="extra-label-box">Gm 1</div>
-          <div class="extra-label-box">Gm 2</div>
-          <div class="extra-label-box">Gm 3</div>
-          <div class="extra-label-box">Gm 4</div>
-          <div class="extra-label-box">SD</div>
-          <div class="extra-label-box">SS</div>
+          <div class="extra-label-box game-box" :class="{ 'active-game': coderStore.gameInfo.gameNo === 1 }"
+               @click="coderStore.setGameNo(1)">Gm 1</div>
+          <div class="extra-label-box game-box" :class="{ 'active-game': coderStore.gameInfo.gameNo === 2 }"
+               @click="coderStore.setGameNo(2)">Gm 2</div>
+          <div class="extra-label-box game-box" :class="{ 'active-game': coderStore.gameInfo.gameNo === 3 }"
+               @click="coderStore.setGameNo(3)">Gm 3</div>
+          <div class="extra-label-box game-box" :class="{ 'active-game': coderStore.gameInfo.gameNo === 4 }"
+               @click="coderStore.setGameNo(4)">Gm 4</div>
+          <div class="extra-label-box status-box" :class="{ 'sd-active': coderStore.gameInfo.suddenDeath }">SD</div>
+          <div class="extra-label-box status-box" :class="{ 'sd-active': coderStore.gameInfo.shuttleShowdown }">SS</div>
         </div>
         <!-- 새로 추가: Next Match / Result 라벨 행 -->
         <div class="extra-label-row">
@@ -188,7 +192,7 @@ export default {
   methods: {
     onResetClick() {
       if (!this.coderStore.isWarmUpRunning) {
-        this.coderStore.resetWarmUpClock()
+        this.coderStore.resetClock()
       }
     }
   },
@@ -383,8 +387,15 @@ export default {
   padding: 0.2rem 0.5rem;
   font-weight: bold;
   text-align: center;
-  cursor: pointer;
   width: 55px;
+}
+
+.game-box {
+  cursor: pointer;
+}
+
+.status-box {
+  cursor: default;
 }
 
 .extra-label-control {
@@ -509,7 +520,17 @@ export default {
   padding: 0.5rem; /* 예시: 배경에 약간의 여백 */
   border-radius: 4px; /* 예시: 모서리 둥글림 */
   border: 1px solid #ccc; /* 예시: 테두리 추가 */
+}
 
+/* sd-active 클래스가 적용되면 배경 빨강, 글자 흰색 등 */
+.sd-active {
+  background-color: #FF9800; /* 원하는 색 */
+  color: #fff;
+}
+
+.active-game {
+  background-color: #2196F3; /* 원하는 색상 */
+  color: #fff;              /* 글자색 흰색으로 */
 }
 
 </style>
