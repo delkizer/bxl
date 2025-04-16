@@ -6,8 +6,10 @@
       <div class="warmup-header">
         <!-- 상단: WARM UP / 시간 -->
         <div class="warmup-row">
-          <span class="warmup-title">WARM UP</span>
-          <span class="warmup-time">{{ coderStore.formattedWarmUpTime }}</span>
+          <span class="warmup-title">Match No.{{ coderStore.gameInfo.matchNo}}</span>
+          <span class="warmup-title">{{ coderStore.currentTargetLabel}} Time</span>
+          <span class="warmup-time">{{ coderStore.currentTimeLabel }}</span>
+
         </div>
         <!-- 팀명 / 점수 -->
         <div class="teams-row">
@@ -84,7 +86,7 @@
           <div class="warmup-clock-setting-box"
               :class="{ 'disabled-box': coderStore.isRunning }"
                @click="coderStore.cycleTimeTarget" >
-            {{ coderStore.currentTargetLabel}}
+            {{ coderStore.currentTargetLabel}}  Clock Setting
           </div>
           <!-- START, RESET 버튼을 중앙 영역 아래에 배치 -->
           <div class="warmup-control-row">
@@ -161,8 +163,8 @@
         </div>
         <!-- 새로 추가: Next Match / Result 라벨 행 -->
         <div class="extra-label-row">
-          <div class="warmup-control-box extra-label-control">Next Match</div>
-          <div class="warmup-control-box extra-label-control">RESULT</div>
+          <div class="warmup-control-box extra-label-control" @click="onClickNextMatch">Next Match</div>
+          <div class="warmup-control-box extra-label-control" @click="onClickResult">RESULT</div>
         </div>
       </div>
     </div>
@@ -211,8 +213,16 @@ export default {
       coderStore.setNonStop(newVal)
     }
 
+    function onClickNextMatch() {
+      coderStore.sendNextMatch();
+    }
+
+    function onClickResult() {
+      coderStore.sendResult();
+    }
+
     return {
-      coderStore, onNonStopChange
+      coderStore, onNonStopChange, onClickNextMatch, onClickResult
     };
   }
 }

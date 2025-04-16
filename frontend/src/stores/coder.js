@@ -43,10 +43,8 @@ export const useCoderStore = defineStore('coderStore', {
     // "MATCH", "BREAK", "WARMUP" 3가지 가능
     currentTimeTarget: "WARMUP",
 
-    matchNo: 0,
-    matchPoint: 0,
-
     gameInfo: {
+      matchNo:0,
       gameNo: 0,
       gameType: "",
       suddenDeath: false,
@@ -95,12 +93,6 @@ export const useCoderStore = defineStore('coderStore', {
           this.teamB.name  = item.team2_name
           this.teamB.score = item.team2_score
 
-          // matchNo, matchPoint, gameNo, etc
-          this.matchNo    = item.match_no
-          this.matchPoint = item.match_point
-
-          // game_no -> this.teamA.game or something
-          // match_status, game_status, etc
         } else {
           console.log('No coder data found.')
         }
@@ -173,6 +165,7 @@ export const useCoderStore = defineStore('coderStore', {
               this.breakTime  = payload.timeInfo.breakTime;
             }
             if (payload.gameInfo) {
+              this.gameInfo.matchNo = payload.gameInfo.matchNo;
               this.gameInfo.gameNo = payload.gameInfo.gameNo;
               this.gameInfo.gameType = payload.gameInfo.gameType;
               this.gameInfo.suddenDeath = payload.gameInfo.suddenDeath;
@@ -420,6 +413,38 @@ export const useCoderStore = defineStore('coderStore', {
       }
     },
 
+    sendNextMatch() {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        console.warn("WebSocket not open. Can't send Next Match.");
+        return;
+      }
+      const msg = {
+        action: "update",
+        resource: "game",
+        payload: {
+          nextMatch: true,
+        },
+      };
+      this.ws.send(JSON.stringify(msg));
+      console.log("WS -> Next Match:", msg);
+    },
+
+    sendResult() {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        console.warn("WebSocket not open. Can't send Result.");
+        return;
+      }
+      const msg = {
+        action: "update",
+        resource: "game",
+        payload: {
+          result: true,
+        },
+      };
+      this.ws.send(JSON.stringify(msg));
+      console.log("WS -> Result:", msg);
+    },
+
   },
 
    getters: {
@@ -431,10 +456,15 @@ export const useCoderStore = defineStore('coderStore', {
     formattedMatchTime:  (state) => formatTime(state.matchTime),
     formattedBreakTime:  (state) => formatTime(state.breakTime),
     currentTargetLabel: (state) => {
-      if (state.currentTimeTarget === "MATCH") return "Match Clock Setting";
-      if (state.currentTimeTarget === "BREAK") return "Break Clock Setting";
-      if (state.currentTimeTarget === "WARMUP") return "Warm Up Clock Setting";
+      if (state.currentTimeTarget === "MATCH") return "Match";
+      if (state.currentTimeTarget === "BREAK") return "Break";
+      if (state.currentTimeTarget === "WARMUP") return "Warm Up";
     },
+     currentTimeLabel: (state) => {
+      if (state.currentTimeTarget === "MATCH") return formatTime(state.warmUpTime);
+      if (state.currentTimeTarget === "BREAK") return formatTime(state.breakTime);
+      if (state.currentTimeTarget === "WARMUP") return formatTime(state.matchTime);
+     },
     currentGameLabel: (state) => {
       const { gameNo, gameType, suddenDeath } = state.gameInfo;
       if (!gameNo || !gameType) return "";
