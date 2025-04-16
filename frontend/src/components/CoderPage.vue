@@ -21,15 +21,15 @@
     <!-- 2) 별도의 라벨 영역 -->
     <div class="label-section">
       <div class="label-row">
-        <div class="clock-box">
+        <div class="clock-box" :class="{ 'selected-clock': coderStore.currentTimeTarget === 'WARMUP' }">
           <p class="clock-title">Warm Up Clock</p>
           <p>{{ coderStore.formattedWarmUpTime }}</p>
         </div>
-        <div class="clock-box">
+        <div class="clock-box" :class="{ 'selected-clock': coderStore.currentTimeTarget === 'MATCH' }">
           <p>Match Clock</p>
           <p>{{ coderStore.formattedMatchTime }}</p>
         </div>
-        <div class="clock-box">
+        <div class="clock-box" :class="{ 'selected-clock': coderStore.currentTimeTarget === 'BREAK' }">
           <p>Break Clock</p>
           <p>{{ coderStore.formattedBreakTime }}</p>
         </div>
@@ -81,7 +81,9 @@
           <div class="non-stop-row">
             <label><input type="checkbox" v-model="coderStore.isNonStop" @change="onNonStopChange"/> Non-Stop Mode</label>
           </div>
-          <div class="warmup-clock-setting-box" @click="coderStore.cycleTimeTarget">
+          <div class="warmup-clock-setting-box"
+              :class="{ 'disabled-box': coderStore.isRunning }"
+               @click="coderStore.cycleTimeTarget" >
             {{ coderStore.currentTargetLabel}}
           </div>
           <!-- START, RESET 버튼을 중앙 영역 아래에 배치 -->
@@ -266,25 +268,6 @@ export default {
 .label-row {
   display: inline-flex;
   gap: 2rem;
-}
-
-.clock-box {
-  background-color: #fff;
-  color: #181818;
-  border: 1px solid #181818;
-  border-radius: 4px;
-  width: 120px;
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 1rem;
-}
-
-.clock-box p {
-  margin: 0.1rem 0;
-}
-
-.clock-box .clock-title {
-  letter-spacing: -0.02em;
 }
 
 /* Reset Score 중앙 배치 */
@@ -531,6 +514,41 @@ export default {
 .active-game {
   background-color: #2196F3; /* 원하는 색상 */
   color: #fff;              /* 글자색 흰색으로 */
+}
+
+.clock-setting-buttons button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.clock-box {
+  background-color: #fff;
+  border: 1px solid #181818;
+  border-radius: 4px;
+  width: 120px;
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+}
+
+.clock-box.selected-clock {
+  background-color: #faf3bb;   /* 원하는 배경색 */
+  border: 2px solid #ff9800;  /* 원하는 테두리색/굵기 */
+}
+
+.clock-box p {
+  margin: 0.1rem 0;
+}
+
+.clock-box .clock-title {
+  letter-spacing: -0.02em;
+}
+
+.disabled-box {
+  opacity: 0.6;              /* 시각적으로 흐리게 */
+  pointer-events: none;      /* 클릭 막기 (필수) */
+  cursor: not-allowed;       /* 마우스 커서도 '금지' 모양 */
 }
 
 </style>

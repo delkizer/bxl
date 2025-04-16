@@ -56,6 +56,8 @@ export const useCoderStore = defineStore('coderStore', {
     ws: null,
 
     isNonStop: false,
+
+    isRunning: false,
   }),
   persist: {
     enabled: true,
@@ -155,15 +157,15 @@ export const useCoderStore = defineStore('coderStore', {
 
           if (msgData.action === "broadcast" ) {
             const payload = msgData.payload;
-            if (payload.teamA) {
-              this.teamA.score = payload.teamA.score;
-              this.teamA.game  = payload.teamA.game;
-              this.teamA.point = payload.teamA.point;
+            if (payload.scoreBoard.teamA) {
+              this.teamA.score = payload.scoreBoard.teamA.score;
+              this.teamA.game  = payload.scoreBoard.teamA.game;
+              this.teamA.point = payload.scoreBoard.teamA.point;
             }
-            if (payload.teamB) {
-              this.teamB.score = payload.teamB.score;
-              this.teamB.game  = payload.teamB.game;
-              this.teamB.point = payload.teamB.point;
+            if (payload.scoreBoard.teamB) {
+              this.teamB.score = payload.scoreBoard.teamB.score;
+              this.teamB.game  = payload.scoreBoard.teamB.game;
+              this.teamB.point = payload.scoreBoard.teamB.point;
             }
             if (payload.timeInfo) {
               this.warmUpTime = payload.timeInfo.warmupTime;
@@ -181,6 +183,9 @@ export const useCoderStore = defineStore('coderStore', {
             }
             if (payload.currentState) {
               this.currentState = payload.currentState;
+            }
+            if (typeof payload.isRunning === "boolean") {
+              this.isRunning = payload.isRunning;
             }
           }
 
