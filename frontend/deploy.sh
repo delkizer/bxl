@@ -2,6 +2,7 @@
 set -e
 
 npm run build
+npm run build:doc
 
 # 배포 대상 디렉토리 초기화
 sudo rm -rf /var/www/bxl-dev/*
