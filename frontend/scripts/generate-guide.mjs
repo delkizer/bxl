@@ -6,7 +6,7 @@ import { parse } from '@vue/compiler-sfc';
 import { load } from 'cheerio';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SRC_DIR   = path.join(__dirname, '..', 'src');
+const SRC_DIR   = path.join(__dirname, '..', 'src', 'components');
 const OUT_FILE  = path.join(__dirname, '..', 'USER_GUIDE.md');
 
 const vueFiles = await getVueFiles(SRC_DIR);
@@ -19,9 +19,20 @@ for (const file of vueFiles) {
 
   const $ = load(descriptor.template.content);
 
-  $('[data-guide]').each((_, el) => {
-    const step  = $(el).attr('data-step')  ?? '';
-    const guide = $(el).attr('data-guide')?.trim() ?? '';
+  $('*').each((_, el) => {
+    const step =
+    $(el).attr('data-step')       ??    //  static
+    $(el).attr(':data-step')      ??    //  :data-step
+    $(el).attr('v-bind:data-step')?? ''; // v-bind:data-step
+
+    const guideRaw =
+    $(el).attr('data-guide')        ??  // static
+    $(el).attr(':data-guide')       ??  // :data-guide
+    $(el).attr('v-bind:data-guide') ?? ''; // v-bind:data-guide
+
+    if (!guideRaw) return;
+    const guide = guideRaw.trim();
+
     const tag   = el.tagName;
     const cls   = ($(el).attr('class') || '').trim().replace(/\s+/g, '.');
     items.push({
