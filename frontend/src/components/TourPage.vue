@@ -5,7 +5,13 @@
       <!-- 대회이름 -->
       <div class="form-row">
         <div class="form-group left">
-          <label for="tournament_title">대회이름</label>
+          <label for="tournament_title"
+               data-step="1"
+               :data-guide="[
+                 '대회 전체 이름을 입력하세요.',
+                 '예: 2025 Korea Open BXL Badminton'
+                 ].join('\n')"
+          >대회이름</label>
         </div>
         <div class="form-group right">
           <input
@@ -22,7 +28,12 @@
       <!-- 대회기간 -->
       <div class="form-row">
         <div class="form-group left">
-          <label for="start_date">대회기간</label>
+          <label for="start_date"
+               data-step="2"
+               :data-guide="[
+                 '대회 시작 / 종료 날짜를 선택합니다.'
+                 ].join('\n')"
+          >대회기간</label>
         </div>
         <!-- 시작일 -->
         <div class="form-group middle">
@@ -49,7 +60,13 @@
       <!-- 대회장소 -->
       <div class="form-row">
         <div class="form-group left">
-          <label for="nationSelect">대회장소</label>
+          <label for="nationSelect"
+               data-step="3"
+               :data-guide="[
+                 '대회 개최 국가와 도시를 선택 그리고 하단에 체육관을 구체적으로 입력 '
+                 ].join('\n')"
+
+          >대회장소</label>
         </div>
         <!-- 국가 -->
         <div class="form-group middle">
@@ -89,7 +106,16 @@
       </div>
 
       <!-- 버튼 영역 -->
-      <div class="button-container">
+      <div class="button-container"
+           data-step="4"
+           data-width="350"
+           :data-guide="[
+             '저장 : 모든 정보를 서버(DB)에 저장합니다',
+             '종료 : 작업을 취소하고 메인 화면으로 돌아갑니다.',
+             '삭제 : 현재 대회를 완전히 삭제합니다'
+             ].join('\n')"
+
+      >
         <button class="btn btn-save" @click="saveData">저장</button>
         <button class="btn btn-cancel" @click="showExitModal = true">종료</button>
         <button class="btn btn-delete" @click="handleDelete" v-if="tournament_uuid">

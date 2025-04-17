@@ -3,7 +3,15 @@
     <h2>Officials Management</h2>
 
     <!-- 상단 기능 버튼 -->
-    <div class="top-bar">
+    <div class="top-bar"
+              data-step="1"
+              data-width="600"
+              :data-guide="[
+                'Add Muitiple Officials : 한 화면에서 여러 심판을 동시에 등록합니다. + Add Row 로 행을 추가한 뒤 Save 를 누르세요.',
+                'Delete Selected : 하단 체크 박스에 선택된 심판을 삭제합니다. '
+       ].join('\n')"
+
+    >
       <button class="btn" @click="showMultiAddModal = true">
         Add Multiple Officials
       </button>
@@ -30,7 +38,13 @@
           <th>Nickname</th>
           <th>Gender</th>
           <th>Nation Code</th>
-          <th>Action</th>
+          <th
+                    data-step="2"
+                    :data-guide="[
+                      '해당 심판 정보를 팝업으로 수정합니다.',
+                      '변경 후 Save 를 누르면 즉시 DB 에 반영됩니다.'
+                      ].join('\n')"
+          >Action</th>
         </tr>
       </thead>
       <tbody>
@@ -48,7 +62,8 @@
           <td>{{ official.gender }}</td>
           <td>{{ official.nation_code }}</td>
           <td>
-            <button class="btn" @click="openEditModal(official)">Edit</button>
+            <button class="btn" @click="openEditModal(official)"
+            >Edit</button>
           </td>
         </tr>
       </tbody>
@@ -112,7 +127,13 @@
 
     <!-- (B) 개별 수정 모달 -->
     <div v-if="showEditModal.valueOf()" class="modal">
-      <div class="modal-content">
+      <div class="modal-content"
+     data-step="3"
+     :data-guide="[
+       '선택한 심판의 이름·국적·성별을 수정합니다.',
+       'Save 로 반영, Cancel 로 취소합니다.'
+     ].join('\n')"
+      >
         <h3>Edit Official</h3>
 
         <div class="form-row">

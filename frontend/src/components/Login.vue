@@ -10,6 +10,10 @@
             id="username"
             v-model="username"
             placeholder="Enter your username"
+            data-step="1"
+            :data-guide="[
+              '로그인에 사용할 사용자 ID(이메일)를 입력합니다.'
+              ].join('\\n')"
           />
         </div>
         <div class="input-wrapper">
@@ -19,9 +23,20 @@
             id="password"
             v-model="password"
             placeholder="Enter your password"
+            data-step="2"
+            :data-guide="[
+              '비밀번호를 입력합니다.',
+              'Caps Lock 상태에 주의하세요.'
+              ].join('\\n')"
           />
         </div>
-        <button type="submit" class="login-btn">Log In</button>
+        <button type="submit" class="login-btn"
+                data-step="3"
+                :data-guide="[
+                  '입력한 ID / Password 로 로그인합니다.',
+                  '오류 시 알림 메시지가 표시됩니다.'
+                  ].join('\\n')"
+        >Log In</button>
       </form>
     </div>
   </div>

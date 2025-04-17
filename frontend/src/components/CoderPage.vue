@@ -2,7 +2,13 @@
   <!-- 전체를 감싸는 래퍼 (필요시) -->
   <div>
     <!-- 1) scoreboard 영역 -->
-    <div class="scoreboard">
+    <div class="scoreboard"
+         data-step="1"
+         :data-guide="[
+           '현재 Match 번호와 선택된 타이머 종류(Time Target)가 표시됩니다.',
+           '팀명과 현재 SCORE 를 실시간으로 확인할 수 있습니다.'
+           ].join('\n')"
+    >
       <div class="warmup-header">
         <!-- 상단: WARM UP / 시간 -->
         <div class="warmup-row">
@@ -22,7 +28,13 @@
 
     <!-- 2) 별도의 라벨 영역 -->
     <div class="label-section">
-      <div class="label-row">
+      <div class="label-row"
+           data-step="2"
+           :data-guide="[
+             '하단 Clock Setting에서 수정할 시간을 선택 가능합니다.',
+             '노란색으로 강조된 박스가 현재 조정 대상(clock target)입니다.',
+             ].join('\n')"
+      >
         <div class="clock-box" :class="{ 'selected-clock': coderStore.currentTimeTarget === 'WARMUP' }">
           <p class="clock-title">Warm Up Clock</p>
           <p>{{ coderStore.formattedWarmUpTime }}</p>
@@ -38,15 +50,31 @@
       </div>
       <!-- 중앙에 Reset Score 박스/버튼 -->
       <div class="reset-row">
-        <div class="reset-box" @click="coderStore.resetScore">Reset Score</div>
+        <div class="reset-box"
+             @click="coderStore.resetScore"
+             data-step="3"
+             :data-guide="[
+               '양 팀의 SCORE를 0 으로 초기화합니다.',
+               'Non‑Stop Mode가 체크되어 있으면 Warn Up에서 Mach Clock으로 지동으로 넘어 갑니다.',
+               '체크되어 있지 않으면 운영자가 Match Clock 상태에서 다시 START를 클릭해야 합니다.'
+             ].join('\n')"
+        >Reset Score</div>
       </div>
       <!-- Warm Up Clock Setting 영역 -->
-      <div class="warmup-clock-setting-row">
+      <div class="warmup-clock-setting-row"
+               data-step="4"
+               :data-guide="[
+                 '화살표(↑↓)로 SCORE 를 증감합니다.',
+                 '각 칸(POINT, GAME) 도 동일한 방식으로 조정합니다.',
+                 '팀 B 역시 동일하게 조정 가능합니다.'
+               ].join('\n')"
+      >
         <div class="win-tracker">
           <div class="win-tracker-team">{{ coderStore.teamA.name }}</div>
 
           <!-- 여기서 badminton-stats를 사용 -->
-          <div class="win-tracker-row badminton-stats">
+          <div class="win-tracker-row badminton-stats"
+          >
             <!-- POINT 칸 -->
             <div class="stats-box">
               <span class="tracker-label">POINT</span>
@@ -73,7 +101,8 @@
 
           </div>
         </div>
-        <div class="warmup-clock-setting-col">
+        <div class="warmup-clock-setting-col"
+        >
           <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(1)">+1</div>
           <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(5)">+5</div>
           <div class="warmup-clock-adjust-box" @click="coderStore.adjustSelectedTime(10)">+10</div>
@@ -81,11 +110,19 @@
         <!-- 중앙 영역을 감싸는 컨테이너 추가 -->
         <div class="warmup-clock-setting-center">
           <div class="non-stop-row">
-            <label><input type="checkbox" v-model="coderStore.isNonStop" @change="onNonStopChange"/> Non-Stop Mode</label>
+            <label>
+           <input type="checkbox" v-model="coderStore.isNonStop" @change="onNonStopChange"/> Non-Stop Mode</label>
           </div>
           <div class="warmup-clock-setting-box"
               :class="{ 'disabled-box': coderStore.isRunning }"
-               @click="coderStore.cycleTimeTarget" >
+               @click="coderStore.cycleTimeTarget"
+               data-step="6"
+               data-width="500"
+               :data-guide="[
+                 'Clock Setting : 클릭하면 WARMUP/MATCH/BREAK 중 하나가 선택됩니다.',
+                 'START/PAUSE/RESET : 시간을 시작/중지/초기화 하는 버튼입니다.'
+               ].join('\n')"
+          >
             {{ coderStore.currentTargetLabel}}  Clock Setting
           </div>
           <!-- START, RESET 버튼을 중앙 영역 아래에 배치 -->
@@ -149,7 +186,13 @@
       </div>
       <div>
         <!-- 추가: 6개 라벨 (가로 배치) -->
-        <div class="extra-label-row">
+        <div class="extra-label-row"
+             data-step="5"
+             :data-guide="[
+               'Game 버튼(Gm 1~4)을 눌러 현재 경기 게임 번호를 설정합니다.',
+               'SD 는 Sudden Death, SS 는 Shuttle Showdown 상태 표시입니다.'
+               ].join('\n')"
+        >
           <div class="extra-label-box game-box" :class="{ 'active-game': coderStore.gameInfo.gameNo === 1 }"
                @click="coderStore.setGameNo(1)">Gm 1</div>
           <div class="extra-label-box game-box" :class="{ 'active-game': coderStore.gameInfo.gameNo === 2 }"
@@ -164,7 +207,13 @@
         <!-- 새로 추가: Next Match / Result 라벨 행 -->
         <div class="extra-label-row">
           <div class="warmup-control-box extra-label-control" @click="onClickNextMatch">Next Match</div>
-          <div class="warmup-control-box extra-label-control" @click="onClickResult">RESULT</div>
+          <div class="warmup-control-box extra-label-control"
+               @click="onClickResult"
+               data-step="7"
+               :data-guide="[
+                 'Next Match : 모든 데이터가 저장되고 다음 Match 로 이동합니다.',
+                 'Result : 현재 Match 결과를 서버에 전송합니다.'
+                 ].join('\n')">RESULT</div>
         </div>
       </div>
     </div>

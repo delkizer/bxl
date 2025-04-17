@@ -4,7 +4,14 @@
     <!-- 실제 내용 컨테이너(카드) -->
     <div class="team-list-container">
       <!-- 상단 셀렉트 박스 -->
-      <select v-model="selectedTour" @change="filterTour" class="tour-select">
+      <select v-model="selectedTour" @change="filterTour" class="tour-select"
+              data-step="1"
+              data-width="600"
+              :data-guide="[
+                '특정 대회(Tournament)만 선택해 팀 목록을 필터링합니다.',
+                '전체 보려면 빈 값(맨 위 옵션)으로 돌려놓으세요.'
+                ].join('\n')"
+      >
         <option value="">-- 모든 대회 보기 --</option>
         <option
           v-for="(tour, index) in tourList"
@@ -16,7 +23,14 @@
       </select>
 
       <!-- 리스트 영역 -->
-      <section class="team-list">
+      <section class="team-list"
+               data-step="2"
+               data-width="600"
+               :data-guide="[
+                 '팀(Team) 카드를 눌러 상세·편집 화면으로 이동합니다.',
+                 '표시: [대회·도시] 팀명 (선수 수)'
+                 ].join('\n')"
+      >
         <div
           v-for="team in team_list"
           :key="team.team_code"
@@ -33,7 +47,15 @@
       </section>
 
       <!-- 하단/우측 액션 -->
-      <footer class="team-footer">
+      <footer class="team-footer"
+              data-step="3"
+              data-width="600"
+              :data-guide="[
+                '새로등록 : 새 팀을 등록합니다.대회·도시·팀명·선수를 입력하는 페이지로 이동합니다.',
+                '뒤로가기 : 이전 화면(대회 리스트 등)으로 돌아갑니다.',
+                '메인가기 : 홈 대시보드로 이동합니다.'
+                ].join('\n')"
+      >
         <button class="btn btn-save" @click="goPage">새로등록</button>
         <button class="btn btn-cancel" @click="goBack">뒤로가기</button>
         <button class="btn btn-tertiary" @click="goHome">메인가기</button>

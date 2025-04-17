@@ -7,19 +7,46 @@
 
     <!-- 버튼 그리드 -->
     <div class="buttons-grid">
-      <button class="btn coder" @click="goToCoderPage">
+      <button class="btn coder"
+              @click="goToCoderPage"
+              data-step="1"
+              :data-guide="[
+                '경기 진행용 Coder 화면으로 이동합니다.',
+                'Match·Timer·Score를 실시간 제어합니다.'
+              ].join('\n')"
+      >
         <span class="btn-text">Coder's Page</span>
       </button>
-      <button class="btn scorer" @click="goToScorerPage">
+      <button class="btn scorer" @click="goToScorerPage"
+              data-step="2"
+              :data-guide="[
+                '실시간 입력기 화면으로 이동합니다.',
+                ].join('\n')"
+      >
         <span class="btn-text">Scorer's Page</span>
       </button>
-      <button class="btn tour" @click="goToTourPage">
+      <button class="btn tour" @click="goToTourPage"
+              data-step="3"
+              :data-guide="[
+                '대회(Tournament) 정보를 조회·편집합니다.'
+                ].join('\n')"
+      >
         <span class="btn-text">Tour's Page</span>
       </button>
-      <button class="btn team" @click="goToGamePage">
+      <button class="btn team" @click="goToGamePage"
+              data-step="4"
+              :data-guide="[
+                '팀·선수·경기(Game) 데이터를 관리합니다.'
+                ].join('\\n')"
+      >
         <span class="btn-text">Team's Page</span>
       </button>
-      <button class="btn official" @click="goToOfficialPage">
+      <button class="btn official" @click="goToOfficialPage"
+              data-step="5"
+              :data-guide="[
+                '심판(Official) 배정·조회 화면으로 이동합니다.'
+                ].join('\\n')"
+      >
         <span class="btn-text">Official's Page</span>
       </button>
     </div>

@@ -2,7 +2,12 @@
   <div class="tour-list-page">
     <div class="tour-list-container">
       <!-- 리스트 영역 -->
-      <section class="tour-list">
+      <section class="tour-list"
+               data-step="1"
+               :data-guide="[
+                 '대회 카드를 클릭하면 상세·편집 페이지로 이동합니다.',
+                 '표시: 국가·도시·기간 – 대회명'].join('\n')"
+      >
         <div
           v-for="tour in tour_list"
           :key="tour.tournament_uuid"
@@ -20,7 +25,14 @@
 
       <!-- 하단/우측 액션 -->
       <footer class="tour-footer">
-        <button class="btn btn-primary" @click="goPage">새로등록</button>
+        <button class="btn btn-primary" @click="goPage"
+               data-step="2"
+               :data-guide="[
+                 '새 대회(Tournament)를 등록합니다.',
+                 '이전 화면으로 돌아갑니다.',
+                 '홈 대시보드로 이동합니다.'
+                 ].join('\n')"
+        >새로등록</button>
         <button class="btn btn-secondary" @click="goBack">뒤로가기</button>
         <button class="btn btn-tertiary"  @click="goHome">메인가기</button>
       </footer>

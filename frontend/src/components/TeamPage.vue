@@ -7,7 +7,12 @@
           <label>대회 선택</label>
         </div>
         <div class="form-group middle">
-          <select class="form-control" v-model="selectedTour">
+          <select class="form-control" v-model="selectedTour"
+                  data-step="1"
+                  :data-guide="[
+                    '팀이 소속될 대회를 선택하세요. 선택 후 선수·팀 정보가 해당 대회에 저장됩니다.'
+                    ].join('\n')"
+          >
             <option value=""></option>
             <option
               v-for="(tour, index) in tourList"
@@ -26,7 +31,10 @@
           <label>팀이름</label>
         </div>
         <div class="form-group middle">
-          <input class="form-control" v-model="teamName" />
+          <input class="form-control" v-model="teamName"
+                  data-step="2"
+                  :data-guide="['팀명을 입력합니다. 예: Seoul Shuttlers'].join('\n')"
+          />
         </div>
       </div>
 
@@ -35,7 +43,11 @@
         <div class="form-group left">
           <label>소속선수</label>
         </div>
-        <div class="player-wrapper">
+        <div class="player-wrapper"
+                  data-step="3"
+                  :data-guide="['이미 등록된 선수 정보를 수정하려면 각 필드를 직접 편집하세요.',
+                  '빨간 버튼으로 해당 선수를 삭제할 수 있습니다.'].join('\n')"
+        >
           <!-- 이미 등록된 선수들 -->
           <div
             v-for="(player, index) in players"
@@ -113,7 +125,11 @@
 
           <!-- 새 선수 추가 영역 -->
           <div class="player-row">
-            <div class="player-row-line">
+            <div class="player-row-line"
+                 data-step="4"
+                 data-guide-w="320"
+                 :data-guide="['여기에 새 선수 정보를 입력합니다.', '모든 필수 항목을 채우고 “등록” 버튼(5번)을 누르세요.'].join('\n')"
+            >
               <div class="form-group middle">
                 <input
                   class="form-control"
@@ -176,9 +192,18 @@
       </div>
 
       <!-- 버튼 영역 -->
-      <div class="button-container">
+      <div class="button-container"
+      >
         <!-- 등록 (새 선수) -->
-        <button class="btn btn-register" @click="openAddModal">등록</button>
+        <button class="btn btn-register" @click="openAddModal"
+           data-step="5"
+           :data-guide="[
+             '등록 : 새 선수 입력 행의 내용을 목록에 추가합니다.',
+             '저장 : 모든 변경 사항을 서버(DB)에 저장합니다.',
+             '종료 : 작업을 종료하고 메인 화면으로 돌아갑니다.'
+             ].join('\n')"
+
+        >등록</button>
         <!-- 저장 -->
         <button class="btn btn-save" @click="openSaveModal">저장</button>
         <!-- 종료 -->

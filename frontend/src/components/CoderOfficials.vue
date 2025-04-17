@@ -47,7 +47,12 @@
           id="matchSelect"
           class="form-control"
           v-model="selectedMatch"
-        >
+          data-step="1"
+          :data-guide="[
+            'Match 번호를 선택합니다.',
+            '선택 시 해당 Match 의 5게임 목록이 자동 로드됩니다.'
+            ].join('\n')"
+         >
           <option value="">-- Select Match --</option>
           <option
             v-for="m in matchOptions"
@@ -69,6 +74,13 @@
           class="form-control"
           v-model="selectedGameUuid"
           :disabled="applyToAllGames"
+          data-step="2"
+          :data-guide="[
+            '심판을 배정할 개별 Game 을 선택합니다.',
+            '아래 체크박스를 선택하면 비활성화되고 5게임에 동일 배정이 적용됩니다.',
+            '✔ 체크하면 Match 내 5게임 모두에 동일한 심판 배정이 적용됩니다.',
+            '해제 시에는 개별 Game 을 선택해 따로 배정할 수 있습니다.'
+            ].join('\n')"
         >
           <option value="">-- Select Game --</option>
           <!-- gameUuidList를 순회, 사용자에겐 game_no를 표시, 값은 game_uuid -->
@@ -90,7 +102,13 @@
       </div>
       <div class="selector-item checkbox-container">
         <!-- clear 버튼 -->
-        <button class="btn-clear" @click="clearAssignments">Clear</button>
+        <button class="btn-clear"
+                @click="clearAssignments"
+                data-step="3"
+                :data-guide="[
+                  '현재 화면에 보이는 모든 심판 배정 정보를 초기화합니다.'
+                  ].join('\n')"
+        >Clear</button>
       </div>
     </div>
     <!-- Officials Assignment -->
@@ -105,7 +123,14 @@
       </h2>
 
       <!-- Umpire, Service Judge, Line Judge (등) 테이블 -->
-      <table class="official-table">
+      <table class="official-table"
+      data-step="5"
+      :data-guide="[
+        '역할별 Assign 버튼을 눌러 심판을 지정합니다.',
+        '이미 배정된 심판은 리스트에서 회색으로 표시되어 선택할 수 없습니다.'
+        ].join('\n')"
+
+      >
         <thead>
           <tr>
             <th>Role</th>
@@ -165,7 +190,10 @@
       class="action-buttons"
       v-if="selectedTournament && selectedTie && selectedMatch && (applyToAllGames || selectedGameUuid)"
     >
-      <button @click="openSaveModal" class="save-btn">저장</button>
+      <button @click="openSaveModal" class="save-btn"
+           data-step="99"
+           :data-guide="[ '저장:현재 입력 내용을 저장합니다.', '종료:저장하지 않고 대시보드로 돌아갑니다.'].join('\n')"
+      >저장</button>
       <button @click="openCancelModal" class="cancel-btn">취소</button>
     </div>
 

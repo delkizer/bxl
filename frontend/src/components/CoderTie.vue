@@ -4,7 +4,10 @@
 
       <!-- 대회, 날짜, tie_no, 팀1, 팀2 선택 등 상단 UI는 그대로 유지 -->
       <div class="form-row">
-        <div class="form-group left">
+        <div class="form-group left"
+            data-step="1"
+            data-guide="대회를 선택하면 해당 대회의 팀·선수 목록이 로드됩니다."
+        >
           <label>대회정보</label>
         </div>
         <div class="form-group middle">
@@ -30,6 +33,8 @@
             class="form-control"
             v-model="gameData.game_date"
             :disabled="isEditMode"
+            data-step="2"
+            data-guide="경기일을 지정합니다."
           />
         </div>
         <div class="form-group middle">
@@ -37,6 +42,8 @@
             class="form-control"
             v-model="gameData.tie_no"
             :disabled="isEditMode"
+            data-step="3"
+            data-guide="Tie 번호(1~9) 를 지정합니다."
           >
             <option v-for="n in 9" :key="n" :value="n">
               {{ n }} Tie
@@ -56,6 +63,12 @@
             v-model="gameData.team1_code"
             @change="onTeam1Change"
             :disabled="isEditMode"
+            data-step="4"
+            :data-guide="[
+                '팀1을 선택합니다.',
+                '이미 선택된 팀2와 동일 팀은',
+                '비활성화됩니다.'
+              ].join('\n')"
           >
             <option value="">-- 팀 선택 --</option>
             <option
@@ -78,6 +91,11 @@
             v-model="gameData.team2_code"
             @change="onTeam2Change"
             :disabled="isEditMode"
+            data-step="5"
+            :data-guide="[
+              '팀2를 선택합니다.',
+              'Team1과 중복되지 않도록 주의하세요.'
+            ].join('\n')"
           >
             <option value="">-- 팀 선택 --</option>
             <option
@@ -93,7 +111,11 @@
       </div>
 
       <!-- 매치 정보 (5경기) -->
-      <div class="matches-container">
+      <div class="matches-container"
+           data-step="5"
+           :data-guide="[ '각 Match 행에서 매치 타입을 고르면 자동으로 필요한 선수 수(점수)가 설정됩니다.'
+           , '수정 시에는 출전하는 선수만 교체가 가능합니다.'].join('\n')"
+      >
         <!-- match_info를 반복 렌더링 -->
         <div
           v-for="(matchItem, idx) in gameData.match_info"
@@ -189,8 +211,12 @@
       </div>
 
       <!-- 버튼 -->
-      <div class="button-container">
-        <button class="btn btn-save" @click="handleSave">저장</button>
+      <div class="button-container"
+      >
+        <button class="btn btn-save" @click="handleSave"
+           data-step="99"
+           :data-guide="[ '저장:현재 입력 내용을 저장합니다.', '종료:저장하지 않고 대시보드로 돌아갑니다.'].join('\n')"
+        >저장</button>
         <button class="btn btn-cancel" @click="handleCancel">종료</button>
       </div>
 
