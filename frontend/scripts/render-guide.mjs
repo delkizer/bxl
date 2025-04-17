@@ -30,7 +30,9 @@ await fs.writeFile(htmlOut, html, 'utf8');
 console.log('✅ user-guide.html 완료');
 
 // 2. HTML → PNG (전체 페이지 캡처)
-const browser = await puppeteer.launch();
+const browser = await puppeteer.launch({
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
 const page = await browser.newPage();
 await page.goto('file://' + htmlOut, { waitUntil:'networkidle0' });
 await page.screenshot({ path: pngOut, fullPage:true });
