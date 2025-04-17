@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "vite build",
     "guide": "node scripts/generate-guide.mjs",
-    "guide:static": "node scripts/generate-guide.mjs",
     "preview": "vite preview",
     "lint": "eslint . --fix"
   },
