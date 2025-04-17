@@ -13,6 +13,8 @@
             v-model="selectedDay"
             @change="filterTies"
             class="tie-select"
+            data-step="1"
+            data-guide="경기일(TIE 날짜) 드롭다운입니다. 날짜를 선택하면 아래 목록이 필터링됩니다."
           >
             <option value="">전체</option>
             <option
@@ -29,10 +31,12 @@
       <section class="tie-list">
         <!-- ties_list 배열을 순회 -->
         <article
-          v-for="tie in ties_list"
+          v-for="(tie, index) in ties_list"
           :key="tie.tie_no"
           class="tie-card"
           @click="selectTie(tie)"
+          :data-step="2 + index"
+          :data-guide="`${tie.tie_no} TIE 카드: 상세·진행 페이지로 이동하려면 클릭하세요.`"
         >
           <h3 class="tie-card-title">{{ tie.tie_no }} TIE ({{ tie.game_date }})</h3>
           <p class="tie-score">
@@ -45,9 +49,19 @@
 
       <!-- 하단/우측 액션 -->
       <footer class="tie-footer">
-        <button class="btn btn-primary" @click="goTie">새로등록</button>
-        <button class="btn btn-secondary" @click="goBack">뒤로가기</button>
-        <button class="btn btn-tertiary" @click="goHome">메인가기</button>
+        <button class="btn btn-primary"
+                @click="goTie"
+                data-step="99"
+                data-guide="새로등록: 신규 TIE(빈 경기) 생성 화면으로 이동합니다."
+        >새로등록</button>
+        <button class="btn btn-secondary" @click="goBack"
+                data-step="100"
+                data-guide="뒤로가기: 이전 화면으로 돌아갑니다."
+        >뒤로가기</button>
+        <button class="btn btn-tertiary" @click="goHome"
+                data-step="101"
+                data-guide="메인가기: 메인 대시보드로 이동합니다."
+        >메인가기</button>
       </footer>
     </div>
 

@@ -334,7 +334,7 @@ async def get_tiemodify(
     result = coder.modify_tie(tie_info)
     return result
 
-@app.get("/api/officials", tags=["Officail"])
+@app.get("/api/officials", tags=["Official"])
 async def get_officials(
         request: Request,
         official_info: Optional[OfficialSearch] = None,

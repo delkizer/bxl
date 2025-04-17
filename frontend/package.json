@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "guide": "node scripts/generate-guide.mjs",
+    "guide:static": "node scripts/generate-guide.mjs",
+    "guide:render": "node scripts/render-guide.mjs",
+    "build:doc": "npm run guide:static && npm run guide:render",
     "preview": "vite preview",
     "lint": "eslint . --fix"
   },
@@ -21,9 +25,14 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/compiler-sfc": "^3.5.13",
+    "cheerio": "^1.0.0",
     "eslint": "^9.21.0",
     "eslint-plugin-vue": "~10.0.0",
     "globals": "^16.0.0",
+    "jsdom": "^26.1.0",
+    "markdown-it": "^14.1.0",
+    "puppeteer": "^24.6.1",
     "vite": "^6.2.1",
     "vite-plugin-vue-devtools": "^7.7.2"
   }
