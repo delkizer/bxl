@@ -1,0 +1,37 @@
+
+@import "tailwindcss";
+
+@theme {
+  /* 브랜드 퍼플 */
+  --color-brand-50 : #F5F3FF;
+  --color-brand-100: #EDE9FE;
+  --color-brand-300: #C7BFFF;
+  --color-brand-500: #7A5AF8;
+  --color-brand-600: #6936F2;
+  --color-brand-800: #4A2699;
+
+  /* 액센트 오렌지 */
+  --color-accent       : #FF8E42;
+  --color-accent-light : #FFB37A;
+  --color-accent-dark  : #D96F34;
+
+  --bg-light: #F3F4F6;  /* 쿨 그레이 */
+  --bg-dark : #1F2937;  /* 차콜 */
+
+  --fg-light: #0F172A;
+  --fg-dark : #FFFFFF;
+}
+
+
+.bg-app        { background-color: var(--bg-light); }
+.dark .bg-app  { background-color: var(--bg-dark);  }
+
+.text-app      { color: var(--fg-light); }
+.dark .text-app{ color: var(--fg-dark); }
+
+#app {
+  @apply w-full max-w-none m-0 block p-0;
+}
+body {
+  @apply block;          /* flex 중앙 정렬 제거 */
+}

@@ -5,7 +5,7 @@ import CoderPage from '@/components/CoderPage.vue'
 import CoderTie from '@/components/CoderTie.vue'
 import CoderList from '@/components/CoderList.vue'
 import CoderOfficials  from "@/components/CoderOfficials.vue";
-import ScorerPage from '@/components/ScorerPage.vue'
+import ScorerPage from '@/components/score/ScorerPage.vue'
 import GameInfoPage from "@/components/GameInfoPage.vue";
 import TourPage from "@/components/TourPage.vue";
 import TourList from "@/components/TourList.vue";
