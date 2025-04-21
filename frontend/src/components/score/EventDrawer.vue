@@ -32,26 +32,41 @@ watch(()=>props.area, reset)
 <template>
   <!-- 사이드 카드 -->
   <aside class="bg-yellow-300 border-[6px] border-[#01579B]
-                p-4 flex flex-col gap-4 w-full md:w-72">
+                p-4 flex flex-col gap-4 w-full md:w-72"
+         :data-step="7"
+         :data-guide="[
+            '여기서 득점 원인과 샷 종류를',
+            '선택하고 확인 버튼을 누르면',
+            '기록됩니다.'
+            ].join('\n')"
+         :data-top="30"
+  >
 
     <!-- 득점 원인 -->
     <div class="flex md:flex-col gap-4">
-      <button v-for="c in causeList" :key="c"
+      <button v-for="( c, idx ) in causeList" :key="c"
         @click="cause=c"
         class="flex-1 h-20 md:h-24 border-[4px] border-[#01579B]
                text-xl font-semibold whitespace-pre-line"
-        :class="cause===c ?'bg-red-600 text-white':'bg-white hover:bg-gray-100'">
+        :class="cause===c ?'bg-red-600 text-white':'bg-white hover:bg-gray-100'"
+         :data-step="8"
+         :data-guide="idx === 1 ? '득점원인' : null"
+      >
         {{ c }}
       </button>
     </div>
 
     <!-- 샷 종류 -->
     <div class="bg-lime-400/70 p-3 flex flex-col gap-3">
-      <div class="grid grid-cols-2 gap-3">
-        <button v-for="s in shotList" :key="s"
+      <div class="grid grid-cols-2 gap-3"
+      >
+        <button v-for="(s, idx) in shotList" :key="s"
           @click="shot=s"
           class="h-12 border-[3px] border-[#01579B] font-medium whitespace-pre-line"
-          :class="shot===s ?'bg-red-600 text-white':'bg-white hover:bg-gray-100'">
+          :class="shot===s ?'bg-red-600 text-white':'bg-white hover:bg-gray-100'"
+                :data-step="9"
+                :data-guide="idx === 4 ? '득점 방식' : null"
+        >
           {{ s }}
         </button>
       </div>

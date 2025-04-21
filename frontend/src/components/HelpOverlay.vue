@@ -9,12 +9,14 @@ async function collect() {
 
   items.value = [...document.querySelectorAll('[data-guide]')].map(el => {
     const { top, left } = el.getBoundingClientRect();
+    const dx = Number(el.dataset.left  ?? 0)   // ← 추가
+    const dy = Number(el.dataset.top   ?? 0)   // ← 추가
     return {
       step : el.dataset.step ?? '',
       guide: el.dataset.guide ?? '',
       width: el.dataset.guidew ?? el.dataset.width ?? '',
-      top  : top  + window.scrollY,
-      left : left + window.scrollX,
+      top  : top  + window.scrollY - dy,
+      left : left + window.scrollX + dx,
     };
   });
 }

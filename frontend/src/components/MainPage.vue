@@ -61,7 +61,7 @@ export default {
       this.$router.push('/coderlist');
     },
     goToScorerPage() {
-      this.$router.push('/scorer');
+      this.$router.push('/coderList');
     },
     goToTourPage() {
       this.$router.push('/tourlist');

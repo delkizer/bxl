@@ -5,8 +5,8 @@
       <p class="modal-message">{{ message }}</p>
       <div class="modal-button-container">
         <!-- CODER(확인) 버튼 -->
-        <button class="modal-btn" @click="$emit('confirm')">
-          {{ confirmButtonLabel }}
+        <button class="modal-btn" @click="$emit('coder')">
+          {{ coderButtonLabel }}
         </button>
         <!-- 가운데 수정 버튼 -->
         <button class="modal-btn" @click="$emit('player')">
@@ -18,8 +18,8 @@
           {{ OfficialButtonLabel }}
         </button>
         <!-- 취소 버튼 -->
-        <button class="modal-btn" @click="$emit('cancel')">
-          {{ cancelButtonLabel }}
+        <button class="modal-btn" @click="$emit('score')">
+          {{ scoreButtonLabel }}
         </button>
       </div>
     </div>
@@ -39,7 +39,7 @@ export default {
       type: String,
       default: "진행하시겠습니까?"
     },
-    confirmButtonLabel: {
+    coderButtonLabel: {
       type: String,
       default: "CODER"
     },
@@ -51,9 +51,9 @@ export default {
       type: String,
       default: "OFFICIAL"
     },
-    cancelButtonLabel: {
+    scoreButtonLabel: {
       type: String,
-      default: "CANCEL"
+      default: "SCORE"
     }
   }
 };

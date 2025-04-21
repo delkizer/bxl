@@ -3,6 +3,7 @@ import '@/assets/tailwind.css'
 import TeamBlock from '@/components/score/TeamBlock.vue'
 import CourtGrid from '@/components/score/CourtGrid.vue'
 import EventDrawer from '@/components/score/EventDrawer.vue'
+import RallyToolbar  from "@/components/score/RallyToolbar.vue";
 import { ref } from 'vue'
 
 const tournament  = '2025 BXL Singapore'
@@ -20,6 +21,8 @@ const gameB       = 0
 const activeGame   = 1   // 1‥4  (진행 중인 Gm 번호)
 const sdActive     = true
 const ssActive     = true
+
+const rallyCount = ref(0)
 
 /* Drawer 상태 */
 const drawerOpen = ref(false)
@@ -56,6 +59,10 @@ const logs = ref<
 >([])
 
 const logOpen = ref(true)
+
+function decRally() {
+  if ( rallyCount.value > 0 ) rallyCount.value--
+}
 
 /* 미니맵 클릭 → Drawer 오픈 */
 function onSelect(cell: number) {
@@ -95,7 +102,6 @@ function rowClass(idx: number) {
     idx === 0                ? 'bg-purple-100'              : '',
   ]
 }
-
 </script>
 
 <template>
@@ -104,7 +110,10 @@ function rowClass(idx: number) {
       <div class="w-full max-w-6xl px-4 space-y-8">
 
         <!-- 대회 메타 -->
-        <section class="space-y-4 bg-white/60 backdrop-blur rounded-xl px-6 py-4">
+        <section class="space-y-4 bg-white/60 backdrop-blur rounded-xl px-6 py-4"
+                 data-step="1"
+                 data-guide="대회 정보 및 경기 정보"
+        >
           <h1 class="text-center font-semibold text-xl text-[--color-brand-600]">
             {{ tournament }}
           </h1>
@@ -122,8 +131,12 @@ function rowClass(idx: number) {
           </span>
         </div>
 
+
         <!-- 스코어 / 선수 블록 -->
-        <section class="grid grid-cols-3 items-center gap-8">
+        <section class="grid grid-cols-3 items-center gap-8"
+                 data-step="2"
+                 data-guide="팀 점수 / MATCH의 포인트 / 게임 스코어 선수 등 정보를 CODER 쪽에서 전달 받음 "
+        >
           <!-- 팀 A : 왼쪽 정렬 -->
           <TeamBlock
             label="팀 A"
@@ -152,17 +165,20 @@ function rowClass(idx: number) {
         </section>
 
         <!-- Game & Mode 버튼 영역 ------------------------------------ -->
-        <section class="flex flex-wrap justify-center gap-4">
+        <section class="flex flex-wrap justify-center gap-4"
+        >
 
           <!-- Gm1~4 버튼 -->
           <button
-            v-for="n in 4"
+            v-for="(n, idx ) in 4"
             :key="`gm${n}`"
             class="h-10 w-20 rounded-md font-medium select-none transition
                    bg-gray-300 text-gray-600"
             :class="{
               'bg-[--color-brand-600] text-white': n === activeGame
             }"
+                 :data-step="3"
+                 :data-guide="idx === 0 ? '현재 진행중인 게임 정보' : null"
           >
             Gm&nbsp;{{ n }}
           </button>
@@ -174,6 +190,8 @@ function rowClass(idx: number) {
                 ? 'bg-[var(--color-accent)] text-white'
                 : 'bg-gray-300 text-gray-600'
             ]"
+            data-step="4"
+            data-guide="서든데스와 셔틀콕 셧다운 상태인지 노출 "
           >
             SD
           </button>
@@ -191,6 +209,14 @@ function rowClass(idx: number) {
         </section>
       </div>
     </div>
+    <div class="!mt-4">
+        <!-- Rally Toolbar (NEW) -->
+        <RallyToolbar
+          v-model="rallyCount"
+          @inc="rallyCount++"
+          @dec="decRally"
+        />
+    </div>
     <div class="flex flex-col md:flex-row gap-8 items-start justify-center !mt-4">
       <div class="flex flex-col md:flex-row gap-8 items-start mx-auto max-w-6xl">
         <!-- 왼쪽 : Shot 패널 -->
@@ -204,7 +230,13 @@ function rowClass(idx: number) {
         <!-- 오른쪽 : 득점 Area + 코트 -->
         <CourtGrid
           class="mt-2 w-[560px] shrink-0"
-          @select="onSelect"   />
+          @select="onSelect"
+          data-step="10"
+          :data-guide="[
+            '코트에서 셔틀콕이 떨어진 위치에 해당하는',
+            '번호를 클릭핫네요'
+            ].join('\n')"
+        />
       </div>
     </div>
     <!-- 로그 영역 ----------------------------------------------------- -->

@@ -5,7 +5,7 @@ import CoderPage from '@/components/CoderPage.vue'
 import CoderTie from '@/components/CoderTie.vue'
 import CoderList from '@/components/CoderList.vue'
 import CoderOfficials  from "@/components/CoderOfficials.vue";
-import ScorerPage from '@/components/score/ScorerPage.vue'
+import ScorePage from '@/components/score/ScorePage.vue'
 import GameInfoPage from "@/components/GameInfoPage.vue";
 import TourPage from "@/components/TourPage.vue";
 import TourList from "@/components/TourList.vue";
@@ -25,7 +25,7 @@ const routes = [
   { path: '/codertie', name: 'codertie', component: CoderTie, meta: { requiresAuth: true } },
   { path: '/coderofficials', name: 'coderofficials', component: CoderOfficials, meta: { requiresAuth: true } },
 
-  { path: '/scorer', name: 'scorer', component: ScorerPage, meta: { requiresAuth: true } },
+  { path: '/score', name: 'score', component: ScorePage, meta: { requiresAuth: true } },
 
   { path: '/gameinfo', name: 'gameinfo', component: GameInfoPage, meta: { requiresAuth: true } },
 

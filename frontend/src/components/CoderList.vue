@@ -67,14 +67,14 @@
       :visible="showModal"
       title="TIE 상세정보 확인"
       :message="modalMessage"
-      confirmButtonLabel="CODER"
+      coderButtonLabel="CODER"
+      scoreButtonLabel="SCORE"
       PlayerButtonLabel="PLAYER"
       OfficialButtonLabel="OFFICIAL"
-      cancelButtonLabel="CANCEL"
-      @confirm="onConfirmSelectTie"
+      @coder="onCoderSelectTie"
+      @score="onScoreSelectTie"
       @official="onOfficialSelectTie"
       @player="onPlayerSelectTie"
-      @cancel="onCancelSelectTie"
     />
   </div>
 </template>
@@ -148,7 +148,7 @@ export default {
       this.selectedTie = tie;
       this.showModal = true;
     },
-    onConfirmSelectTie() {
+    onCoderSelectTie() {
       const coderStore = useCoderStore();
       coderStore.setTieData(
         this.selectedTie.tournament_uuid,
@@ -178,8 +178,15 @@ export default {
       this.showModal = false;
       this.$router.push("/codertie");
     },
-    onCancelSelectTie() {
+    onScoreSelectTie() {
+      const coderStore = useCoderStore();
+      coderStore.setTieData(
+        this.selectedTie.tournament_uuid,
+        this.selectedTie.tie_no,
+        this.selectedTie.game_date
+      );
       this.showModal = false;
+      this.$router.push("/score");
     },
   },
 };
