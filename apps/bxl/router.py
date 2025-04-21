@@ -8,16 +8,16 @@ from class_config.class_db import ConfigDB
 from class_config.class_define import Define
 from class_config.class_env import Config
 from class_config.class_log import ConfigLogger
-from class_lib.api.tour import Tour
-from class_lib.api.coder import Coder
-from class_lib.api.team import Team
-from class_lib.api.officials import Officials
+from class_lib.bwf_api.tour import Tour
+from class_lib.bwf_api.coder import Coder
+from class_lib.bwf_api.team import Team
+from class_lib.bwf_api.officials import Officials
 from define.define_code import DefineCode
-from class_lib.api.auth import Auth
-from class_lib.api.base_model import UserInfo, TourInfo, TeamAndPlayerInfo, TieInfo, OfficialInfo, GameOfficialInfo \
+from class_lib.bwf_api.auth import Auth
+from class_lib.bwf_api.base_model import UserInfo, TourInfo, TeamAndPlayerInfo, TieInfo, OfficialInfo, GameOfficialInfo \
     , OfficialSearch
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/bwf_api")
 
 # 기본 클래스 설정
 config = Config()

@@ -37,7 +37,7 @@ export const useAuthStore = defineStore('auth', {
       this.isLoggedIn = false;
       this.user = null;
       this.refreshTried = false;
-      // 필요하다면 쿠키 삭제 로직 추가(서버에 /api/logout 등)
+      // 필요하다면 쿠키 삭제 로직 추가(서버에 /bwf_api/logout 등)
       router.push('/login');
     },
   },

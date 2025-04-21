@@ -5,10 +5,10 @@ from fastapi import HTTPException, status, Query
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 
-from class_lib.api.base_model import OfficialInfo, GameOfficialInfo, OfficialSearch
+from class_lib.bwf_api.base_model import OfficialInfo, GameOfficialInfo, OfficialSearch
 from class_config.class_db import ConfigDB
 from class_config.class_env import Config
-from class_lib.api.db_model import OfficialInfoModel
+from class_lib.bwf_api.db_model import OfficialInfoModel
 from class_lib.local_utils import utils
 from define.define_code import DefineCode
 

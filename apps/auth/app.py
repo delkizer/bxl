@@ -16,7 +16,7 @@ def create_auth_app() -> FastAPI:
     app = FastAPI(
         title="Auth Service (SSO)",
         version="0.0.1",
-#        docs_url="/api/docs",
+#        docs_url="/bwf_api/docs",
 #        openapi_url="/openapi.json",
         docs_url=None,
         openapi_url=None,

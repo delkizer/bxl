@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 
 from class_config.class_db import ConfigDB
 from class_config.class_env import Config
-from class_lib.api.base_model import TieInfo, MatchInfo
+from class_lib.bwf_api.base_model import TieInfo, MatchInfo
 from class_lib.local_utils import utils
 from define.define_code import DefineCode
 

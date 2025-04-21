@@ -8,7 +8,7 @@ from starlette import status
 from class_config.class_db import ConfigDB
 from class_config.class_env import Config
 from class_lib.local_utils.utils import Utils
-from class_lib.api.base_model import TourInfo
+from class_lib.bwf_api.base_model import TourInfo
 from define.define_code import DefineCode
 
 

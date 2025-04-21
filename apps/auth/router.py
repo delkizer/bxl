@@ -2,17 +2,17 @@ from fastapi import APIRouter, Depends, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from class_config.class_db import ConfigDB
-from class_lib.api.auth import Auth
+from class_lib.bwf_api.auth import Auth
 from class_config.class_env import Config
 from class_config.class_log import ConfigLogger
-from class_lib.api.base_model import UserLogin, UserCreate, UserInfo
+from class_lib.bwf_api.base_model import UserLogin, UserCreate, UserInfo
 
 config  = Config()
 logger  = ConfigLogger('http_log', 365).get_logger('auth')
 auth    = Auth(logger)
 db_config = ConfigDB()
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/bwf_api")
 
 # 로그인 API (Swagger 연동 포함)
 @router.post("/login", tags=["Auth"])

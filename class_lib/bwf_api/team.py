@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from class_config.class_db import ConfigDB
 from class_config.class_env import Config
-from class_lib.api.base_model import TeamAndPlayerInfo, PlayerInfo
+from class_lib.bwf_api.base_model import TeamAndPlayerInfo, PlayerInfo
 from class_lib.local_utils.utils import Utils
 from define.define_code import DefineCode
 

@@ -28,8 +28,8 @@ def custom_openapi():
     return root_schema
 root = FastAPI(
     title="BWF/BXL API",
-    docs_url="/api/docs",
-    openapi_url="/api/openapi.json",
+    docs_url="/bwf_api/docs",
+    openapi_url="/bwf_api/openapi.json",
 )
 root.openapi = custom_openapi
 # 공통 CORS 추가
